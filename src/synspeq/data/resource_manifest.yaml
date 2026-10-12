@@ -1,0 +1,212 @@
+# SYNSPEQ resource manifest (design draft, 2026-10-12). The package ships NO third-party data: it ships this manifest, importers, checks and download help.
+# default_enabled: only the AiZynthFinder stock. Everything else is opt-in through config.yaml (resources: [...]) and prints its terms before use.
+# access: public_download | registration | request | own_licence.   automated: whether `synspeq data download <id>` may fetch it (the user is shown the terms first).
+schema: 2
+profiles:
+  default: {planner_stock: [aizynth_zinc]}
+  custom:  {planner_stock: "any enabled subset", purchasing: "any enabled subset"}
+resources:
+  - id: aizynth_zinc
+    name: "AiZynthFinder public ZINC stock (17.4M compounds)"
+    role: planner_stock
+    default_enabled: true
+    access: public_download
+    automated: true
+    get: "`synspeq data download aizynth_zinc --dest <dir> --accept-terms` (runs AiZynthFinder's `download_public_data`, which also fetches the USPTO models), then `synspeq data import aizynth_zinc <dir>/zinc_stock.hdf5`."
+    url: https://figshare.com/articles/dataset/AiZynthFinder_a_fast_robust_and_flexible_open-source_software_for_retrosynthetic_planning/12334577
+    file: "zinc_stock.hdf5 (zinc_stock_17_04_20.hdf5)"
+    format: "aizynthfinder_hdf5"
+    cite: "Genheden et al., J Cheminform 2020, 12, 70; Irwin et al., J Chem Inf Model 2020 (ZINC)"
+    terms: "figshare record licence MIT; underlying ZINC terms apply"
+    check: {min_compounds: 17000000}
+    flags: {redistributable: false}
+    provides: [planner_stock]
+    if_missing: {unspecified_by_user: "default stock; offer download (terms first), never silent", requested_but_absent: "abort before any computation (core resource)"}
+  - id: zinc20_tranches
+    name: "ZINC20 purchasable tranches (purchasability A and B, all reactivity classes; ~11M)"
+    role: planner_stock
+    access: public_download
+    automated: false   # automatic fetch not implemented in v0.x: guided import
+    automation_planned: true
+    get: "Download the 2D tranche files from https://files.docking.org/2D (pick purchasability letters A and B), then `synspeq data import zinc20_tranches <dir>`. Cite ZINC20. Automatic download is planned."
+    url: https://files.docking.org/2D
+    format: "smiles_tranche_files"
+    cite: "Irwin et al., J Chem Inf Model 2020, 60, 6065 (doi:10.1021/acs.jcim.0c00675)"
+    terms: "Free to use and download; do not redistribute major portions without written permission (https://wiki.docking.org/index.php/UCSF_ZINC_License)"
+    warn: "Snapshot dates differ between downloads; the report prints the file dates. Vendor-claimed availability, not verified."
+    flags: {redistributable: false}
+    provides: [planner_stock]
+    if_missing: {not_requested: "ignored", requested_but_absent: "abort (a stock change alters every P1 number; never swap silently)"}
+  - id: askcos_buyables
+    name: "ASKCOS buyables"
+    role: planner_stock
+    access: public_download
+    automated: false   # automatic fetch not implemented in v0.x: guided import
+    automation_planned: true
+    get: "Download the buyables file from the askcos-data repository (buyables folder)."
+    url: https://github.com/ASKCOS/askcos-data
+    format: "json_or_csv_with_smiles"
+    cite: "ASKCOS / MLPDS Consortium (askcos-data)"
+    terms: "Data and models CC BY-NC-SA 4.0 (non-commercial, share-alike); underlying vendor catalogue terms not stated"
+    warn: "Non-commercial use only; a merged union containing it inherits the share-alike condition."
+    flags: {noncommercial: true, sharealike: true, redistributable: false}
+    provides: [planner_stock]
+    if_missing: {not_requested: "ignored", requested_but_absent: "abort"}
+  - id: enamine_bb
+    name: "Enamine Building Blocks (Global Stock SDF)"
+    role: [planner_stock, purchasing_catalogue]
+    access: public_download
+    automated: false
+    get: "Open the Enamine building-blocks catalogue page, section 'Download SD files', and save the 'Global Stock' SDF. Then: `synspeq data import enamine_bb <file.sdf>`."
+    url: https://enamine.net/building-blocks/building-blocks-catalog
+    format: "sdf"
+    terms: "Enamine Terms of use apply (https://enamine.net/terms-of-use): catalogue for information/purchasing; no redistribution; restrictions on use of Enamine Data in computational systems and on sharing derived subsets"
+    warn: "You are responsible for confirming that your use is permitted. SYNSPEQ never uploads or shares the file or indexes built from it."
+    flags: {redistributable: false}
+    provides: [planner_stock, purchasing_stocked_tier]
+    if_missing: {not_requested: "P3 stocked tier not_assessed; run succeeds", requested_but_absent: "abort, or skip those metrics with on_missing: skip"}
+  - id: emolecules_bb
+    name: "eMolecules building blocks (orderbb parent-structure file)"
+    role: planner_stock
+    access: own_licence
+    automated: false
+    get: "Obtain the building-block ('orderbb') structure download from eMolecules under your own account/agreement, then `synspeq data import emolecules_bb <file.smi.gz>`."
+    url: https://www.emolecules.com
+    format: "smiles"
+    terms: "Not found by the SYNSPEQ authors; read the terms of your eMolecules agreement."
+    flags: {redistributable: false}
+    provides: [planner_stock]
+    if_missing: {not_requested: "ignored", requested_but_absent: "abort"}
+  - id: molport
+    name: "Molport catalogue"
+    role: planner_stock
+    access: registration
+    automated: false
+    get: "Register with Molport and use its database download (FTP/SDF/SMILES; see the Molport database-download page), then `synspeq data import molport <file>`."
+    url: https://blog.molport.com/database/ftp-database-download/
+    format: "sdf_or_smiles"
+    terms: "Registered users; Molport's open releases are CC BY-NC 4.0 (internal, non-commercial). Read your download terms."
+    warn: "The Molport file is the full catalogue, not restricted to in-stock building blocks."
+    flags: {noncommercial: true, redistributable: false}
+    provides: [planner_stock]
+    if_missing: {not_requested: "ignored", requested_but_absent: "abort"}
+  - id: enamine_real
+    name: "Enamine REAL (purchasing lookups only; never a planner stock; ~9.6B)"
+    role: purchasing_catalogue
+    access: request
+    automated: false
+    get: "Get REAL from Enamine (SMILES/SDF, or the REAL Database page; request required for large files). Point SYNSPEQ at the directory: `synspeq data import enamine_real <dir>`; it runs the one-pass membership scan on your route intermediates."
+    url: https://enamine.net/compound-collections/real-compounds/real-database
+    format: "smiles_or_sdf_directory"
+    terms: "Enamine Terms of use apply; REAL access terms are between you and Enamine."
+    warn: "Without REAL, REAL-dependent metrics are reported as unavailable, never as zero."
+    flags: {redistributable: false}
+    provides: [purchasing_on_demand_tier, reference_scaffold_profile]
+    if_missing: {not_requested: "REAL-dependent metrics not_assessed; run succeeds, banner states it", requested_but_absent: "abort, or skip with on_missing: skip", partial: "lower/upper bounds, coverage stated, never treated as non-hit"}
+  - id: user_union_stock
+    name: "Your own union planner stock (built with `synspeq data build-union`)"
+    role: planner_stock
+    access: own_licence
+    automated: false
+    get: "`synspeq data build-union --resources a,b --out <dir>` merges the enabled catalogues into one InChIKey stock and registers it."
+    format: "aizynthfinder_hdf5"
+    terms: "Derived from its members: follow each member's terms before sharing it."
+    warn: "Non-commercial or share-alike members make the union non-commercial or share-alike."
+    provides: [planner_stock]
+    if_missing: {not_requested: "ignored", requested_but_absent: "abort"}
+  - id: uspto_rxninsight_db
+    name: "USPTO reaction database for Rxn-INSIGHT (1,779,551 records, rev 4)"
+    role: reaction_database
+    default_enabled: true
+    access: public_download
+    automated: true
+    fetch: {url: "https://zenodo.org/api/records/10171745/files/uspto_rxn_insight.gzip/content", filename: uspto_rxn_insight.gzip, md5: 47f406a137df8bdfc541c5b12f101b91, size: 1507837780}
+    get: "`synspeq data download uspto_rxninsight_db --dest <dir> --accept-terms` (1.5 GB from Zenodo, md5 verified, then registered). Or download it yourself from the Zenodo record 10.5281/zenodo.10171745 and `synspeq data import uspto_rxninsight_db <file>`."
+    url: https://doi.org/10.5281/zenodo.10171745
+    format: "parquet"
+    cite: "Dobbelaere et al., J Cheminform 2024, 16, 37; Zenodo 10.5281/zenodo.10171745"
+    terms: "CC BY 4.0"
+    provides: [reaction_database]
+    if_missing: {not_requested: "not allowed: Pillar 2 needs it; if the user turns Pillar 2 off in config.pillars it is ignored", requested_but_absent: "abort the Pillar 2 stage (P1, P3, P4 still run when --allow-missing)"}
+  - id: aizynth_models
+    name: "AiZynthFinder USPTO expansion/filter/ring-breaker models and templates"
+    role: planner_models
+    default_enabled: true
+    access: public_download
+    automated: true
+    get: "`synspeq data download aizynth_models --dest <dir> --accept-terms` (runs AiZynthFinder's `download_public_data`; AiZynthFinder must be installed), then `synspeq data import aizynth_models <dir>`."
+    url: https://zenodo.org/records/7797465
+    cite: "Saigiridharan et al. 2024 (AiZynthFinder 4.0); Zenodo 7797465 and 7341155"
+    terms: "CC BY 4.0"
+    provides: [planner_models]
+    if_missing: {not_requested: "default; offer download", requested_but_absent: "abort (no route recovery possible)"}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# What each metric needs, and what is reported when it is not there.  Result status vocabulary (never a bare 0 or blank):
+#   value        computed from complete inputs
+#   bound        computed from partial inputs; reported as lower or upper bound with the coverage that was available
+#   not_assessed the user did not request the resource (no error, exit 0, report says what to enable)
+#   unavailable  the user requested it but it is missing/invalid and the run was told to continue (on_missing: skip or --allow-missing)
+#   blocked      the run refused to start (core resource missing; exit code 2)
+metric_requirements:
+  P1_findability:
+    requires_all: [planner_models]
+    requires_any: [planner_stock]        # default fills it with aizynth_zinc
+    on_unmet: blocked
+  P2_chemical_support:
+    requires_all: [reaction_database, P1_routes]
+    on_unmet: {unrequested: not_assessed, requested_but_missing: "blocked unless --allow-missing -> unavailable"}
+  P3_deliverability:
+    requires_any: [purchasing_stocked_tier, purchasing_on_demand_tier]   # a catalogue beyond the planner stock is needed: stock hits are already leaves
+    sub_metrics:
+      residual_steps_and_frontier_found: {requires_any: [purchasing_stocked_tier, purchasing_on_demand_tier], label_with: "which catalogue(s) defined the frontier"}
+      real_needed: {requires_all: [purchasing_on_demand_tier, purchasing_stocked_tier], note: "needs both tiers to separate stocked from on-demand; with REAL only, report frontier found without the tier split"}
+    on_unmet: not_assessed
+  P4_coverage:
+    requires_all: [molecules]
+    sub_metrics:
+      enamine_affinity: {requires_any: [reference_scaffold_profile], on_unmet: not_assessed}   # the prior is a random sample of REAL parts
+    on_unmet: not_assessed
+
+# ----------------------------------------------------------------------------------------------------------------------
+missing_resource_policy:
+  resolution_order: [cli_flags, config_yaml, profile, built_in_default]
+  states: [ready, not_requested, missing, invalid, partial]
+  rules:
+    - id: R1
+      rule: "Unspecified is not an error. A resource the user never mentions is not_requested; its dependent metrics are not_assessed, the run exits 0, and the report states what was not assessed and how to enable it."
+    - id: R2
+      rule: "Requested but absent or invalid is an error at `data check` and at run start, before any computation, with the exact fix (command, URL, expected file). `on_missing: skip` in config or `--allow-missing` turns it into unavailable plus a banner. Never silent."
+    - id: R3
+      rule: "No silent substitution. If a user-named stock is missing the tool does not fall back to the default stock, because that changes every P1 number. It stops and offers `data download aizynth_zinc` only as a separate explicit choice."
+    - id: R4
+      rule: "Absence is never zero. REAL absent -> REAL-dependent columns read 'not assessed (REAL not configured)'. A REAL non-hit is a measured negative and is only recorded when the lookup was actually run."
+    - id: R5
+      rule: "Partial resources are bounds. A REAL scan that covers X of Y queried molecules: hits are a lower bound, unrecorded queries are 'unknown' (not non-hit); residual steps are an upper bound; coverage X/Y is printed in the table. A partial planner stock is refused (blocked), because membership is the measurement."
+    - id: R6
+      rule: "Downloads need consent. Resources with terms print the terms and citation and require interactive confirmation or `--accept-terms <id>`; headless runs never auto-download unless `auto_download: true` is set. Only resources with automated: true can be fetched."
+    - id: R7
+      rule: "Offline by default at run time. Only `data download` touches the network. A compute node without internet uses the local store; a missing item produces the R2 error with the command to run elsewhere."
+    - id: R8
+      rule: "Everything is stamped. The run manifest records each resource id, file name, size, sha256, record count, snapshot date, RDKit version and canonicalisation settings. Reports from different stocks are labelled and `synspeq compare` refuses to rank across stock hashes unless forced."
+    - id: R9
+      rule: "Incremental. The cache is keyed by (resource hash, planner settings, model hash). Adding REAL later re-runs only the scan and the REAL-dependent P3 parts, not P1 or P2."
+    - id: R10
+      rule: "Licence flags propagate. A union stock or report derived from a non-commercial or share-alike resource carries that flag; per-molecule vendor-membership columns are marked and `export --aggregate-only` drops them. The user is responsible for the terms of what they share."
+    - id: R11
+      rule: "Sanity gates. `check.min_compounds`, parse-rate and duplicate-rate thresholds apply at import; a file that fails is `invalid` with the first failing line shown."
+use_cases:
+  - {id: UC1, case: "User gives only an SDF; no config", behaviour: "default profile: aizynth_zinc + USPTO DB + models. If not downloaded: stop with `synspeq data download ...` (terms shown first). P3 not_assessed (no purchasing catalogue); P4 enamine_affinity not_assessed. Exit 0 once the core resources exist."}
+  - {id: UC2, case: "User cannot get REAL and does not mention it", behaviour: "not_requested: all REAL-dependent metrics not_assessed, run succeeds, banner. If Enamine BB is present, P3 uses the stocked tier only and is labelled 'stocked catalogue only'."}
+  - {id: UC3, case: "User lists enamine_real but the path is wrong or empty", behaviour: "R2: error at `data check` and at run start; with on_missing: skip -> unavailable + banner."}
+  - {id: UC4, case: "REAL supplied only in part (some shards) or the scan was interrupted", behaviour: "R5: bounds with coverage printed; the scan resumes with `synspeq run --resume`."}
+  - {id: UC5, case: "Enamine BB present, REAL absent", behaviour: "frontier computed on the stocked tier; 'REAL needed' not_assessed; residual steps labelled as upper bound relative to the full Enamine offer."}
+  - {id: UC6, case: "REAL present, Enamine BB absent", behaviour: "frontier on the on-demand tier only; stocked/on-demand split not_assessed."}
+  - {id: UC7, case: "User brings a proprietary stock", behaviour: "`data import custom_stock <file> --role planner_stock`; no terms shown beyond a note; P1 uses it; P3 not_assessed unless a purchasing catalogue is added."}
+  - {id: UC8, case: "Configured stock file missing", behaviour: "blocked (R3), no fallback to the default."}
+  - {id: UC9, case: "USPTO DB missing", behaviour: "P2 blocked or unavailable per flag; P1, P3, P4 unaffected."}
+  - {id: UC10, case: "Compute node offline", behaviour: "R7."}
+  - {id: UC11, case: "User adds REAL after a first run", behaviour: "R9: only the REAL-dependent stage runs; previous results kept, the report is regenerated with the new status."}
+  - {id: UC12, case: "Two runs with different stocks are compared", behaviour: "R8: refused by default; allowed with --force and a visible warning."}
+  - {id: UC14, case: "User wants to share the report", behaviour: "R10: `export --aggregate-only`; flags show which files contain vendor-derived columns."}
+  - {id: UC15, case: "Corrupt or wrongly formatted import", behaviour: "R11: invalid with the first failing line; nothing is written to the store."}

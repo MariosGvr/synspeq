@@ -1,0 +1,14 @@
+# Minimal install: ingestion, Pillar 1 replay, Pillar 3, Pillar 4 (no planner, no Pillar 2).
+name: synspeq-core
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python>=3.9
+  - rdkit
+  - pandas
+  - pyyaml
+  - pyarrow
+  - pip
+  - pip:
+      - -e .                    # run from the repository root (the clone)

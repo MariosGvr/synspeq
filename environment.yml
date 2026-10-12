@@ -1,0 +1,22 @@
+# One-command install:  conda env create -f environment.yml   (then: conda activate synspeq)
+# Everything SYNSPEQ needs, including the optional planner (AiZynthFinder) and Pillar 2 (Rxn-INSIGHT + RXNMapper).
+# The pins follow AiZynthFinder 4.4.1 (rdkit < 2024, numpy < 2, pandas < 3, python < 3.13).
+name: synspeq
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pip
+  - rdkit=2023.09.6
+  - numpy<2
+  - pandas<3
+  - pyarrow
+  - pyyaml
+  - pytables
+  - setuptools<81          # rxn-insight imports pkg_resources
+  - rxnmapper              # conda-forge, noarch (brings pytorch + transformers)
+  - pip:
+      - aizynthfinder==4.4.1    # PyPI only (not on conda-forge)
+      - rxn-insight==0.1.3      # PyPI only (not on conda-forge)
+      - -e .                    # run from the repository root (the clone)

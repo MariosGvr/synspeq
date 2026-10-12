@@ -1,0 +1,47 @@
+{% set pyproject = load_file_data("../pyproject.toml", from_recipe_dir=True) %}
+{% set version = pyproject["project"]["version"] %}
+package:
+  name: synspeq
+  version: {{ version }}
+
+source:
+  path: ..
+
+build:
+  noarch: python
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  entry_points:
+    - synspeq = synspeq.cli:main
+
+requirements:
+  host:
+    - python >=3.9
+    - pip
+    - setuptools >=64
+  run:
+    - python >=3.9
+    - rdkit
+    - pandas
+    - pyyaml
+    - pyarrow
+
+test:
+  imports:
+    - synspeq
+    - synspeq.metrics
+  commands:
+    - synspeq --version
+    - synspeq data list
+  requires:
+    - pip
+
+about:
+  home: https://github.com/MariosGvr/synspeq
+  summary: SYNthesizability through Standardised Planner Evaluation and Quantification
+  description: |
+    Four-pillar evaluation of molecule sets (route recovery, retrieved precedent support, purchasing
+    deliverability, coverage). Core install only; the optional planner (AiZynthFinder) and Pillar 2
+    (Rxn-INSIGHT, RXNMapper) come from environment.yml because they are PyPI-only.
+  license: Apache-2.0
+  license_file: LICENSE

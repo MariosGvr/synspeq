@@ -1,0 +1,13 @@
+__pycache__/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+*.sdf
+*.sdf.gz
+*.hdf5
+*.parquet
+*.h5
+registry.json
+.synspeq/
