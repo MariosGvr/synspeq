@@ -1,6 +1,11 @@
 """Pillar 3: deliverability on the primary route of routed molecules (purchasing frontier, strict matching)."""
 from __future__ import annotations
-from statistics import median
+from statistics import median as _median
+
+
+def median(values):
+    m = _median(list(values))
+    return int(m) if float(m).is_integer() else m
 from typing import Dict, List, Optional
 from ..populations import Population
 from ..purchasing import Catalogue, frontier_for_outcome

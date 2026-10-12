@@ -1,0 +1,14 @@
+{
+ "mol_id": "ethanol_again",
+ "smiles": "CCO",
+ "solvable": true,
+ "n_steps": 0,
+ "trees": [
+  {
+   "type": "mol",
+   "smiles": "CCO",
+   "in_stock": true
+  }
+ ],
+ "error": null
+}

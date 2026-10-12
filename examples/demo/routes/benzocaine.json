@@ -1,0 +1,31 @@
+{
+ "mol_id": "benzocaine",
+ "smiles": "CCOC(=O)c1ccc(N)cc1",
+ "solvable": true,
+ "n_steps": 1,
+ "trees": [
+  {
+   "type": "mol",
+   "smiles": "CCOC(=O)c1ccc(N)cc1",
+   "in_stock": false,
+   "children": [
+    {
+     "type": "reaction",
+     "children": [
+      {
+       "type": "mol",
+       "smiles": "Nc1ccc(C(=O)O)cc1",
+       "in_stock": true
+      },
+      {
+       "type": "mol",
+       "smiles": "CCO",
+       "in_stock": true
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "error": null
+}

@@ -1,0 +1,43 @@
+{
+ "mol_id": "ibuprofen",
+ "smiles": "CC(C)Cc1ccc(C(C)C(=O)O)cc1",
+ "solvable": true,
+ "n_steps": 2,
+ "trees": [
+  {
+   "type": "mol",
+   "smiles": "CC(C)Cc1ccc(C(C)C(=O)O)cc1",
+   "in_stock": false,
+   "children": [
+    {
+     "type": "reaction",
+     "children": [
+      {
+       "type": "mol",
+       "smiles": "CC(C)Cc1ccc(C(C)C#N)cc1",
+       "in_stock": false,
+       "children": [
+        {
+         "type": "reaction",
+         "children": [
+          {
+           "type": "mol",
+           "smiles": "CC(C)Cc1ccc(C(C)Cl)cc1",
+           "in_stock": true
+          },
+          {
+           "type": "mol",
+           "smiles": "N#C[Na]",
+           "in_stock": true
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "error": null
+}

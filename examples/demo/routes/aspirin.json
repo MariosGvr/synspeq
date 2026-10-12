@@ -1,0 +1,31 @@
+{
+ "mol_id": "aspirin",
+ "smiles": "CC(=O)Oc1ccccc1C(=O)O",
+ "solvable": true,
+ "n_steps": 1,
+ "trees": [
+  {
+   "type": "mol",
+   "smiles": "CC(=O)Oc1ccccc1C(=O)O",
+   "in_stock": false,
+   "children": [
+    {
+     "type": "reaction",
+     "children": [
+      {
+       "type": "mol",
+       "smiles": "O=C(O)c1ccccc1O",
+       "in_stock": true
+      },
+      {
+       "type": "mol",
+       "smiles": "CC(=O)OC(C)=O",
+       "in_stock": true
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "error": null
+}

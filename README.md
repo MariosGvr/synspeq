@@ -51,17 +51,26 @@ To evaluate saved JSON from a previous AiZynthFinder run without rerunning plann
 synspeq evaluate molecules.sdf --routes-dir aizynth_json/ --pocket-field pocket_id --out results/
 ```
 
-### Example output
-```
-P1  Find 24.4%  Find>=1 22.7%  distinct 19,970  complete=True
-P2  supported (primary) …% of routed, (any saved) …%
-P3  median residual steps 4  frontier found 92.0%  needs on-demand 15.0%
-P4  N50 38  unique scaffold ratio 0.197  CSR-AUC 0.840
-```
-This output is for a set of 20,000 raw molecules.
+### Try it on the demo
+`examples/demo/` holds a seven-molecule SDF with hand-written planner records in AiZynthFinder's JSON layout and a
+two-entry purchasing catalogue. The records illustrate the input format; they are not planner output.
 
-Outputs include the HTML report, `report.json`, per-molecule results in `molecules.csv` and resource metadata in
-`run_manifest.json`. The manifest records the resources used, including their sizes and checksums.
+```bash
+synspeq data import enamine_bb examples/demo/building_blocks.smi
+synspeq evaluate examples/demo/molecules.sdf --routes-dir examples/demo/routes \
+    --pocket-field pocket_id --pillars P1,P3,P4 --resources enamine_bb --out demo_results/
+```
+```
+NOTE P2: not_assessed (pillar not selected)
+NOTE P3.real_needed: not_assessed (needs both the stocked and the on-demand tier)
+NOTE P4.enamine_affinity: not_assessed (no reference catalogue configured)
+P1  Find 83.3%  Find>=1 66.7%  distinct 6  complete=True
+P3  median residual steps 1  frontier found 50.0%  needs on-demand 0.0%
+P4  N50 1  unique scaffold ratio 0.250  CSR-AUC 1.000
+```
+The input has seven valid records and one invalid record. One molecule appears twice, so six distinct molecules
+are evaluated. Outputs include the HTML report, `report.json`, per-molecule results in `molecules.csv` and resource
+metadata in `run_manifest.json`. The manifest records the resources used, including their sizes and checksums.
 
 ## Reporting conventions
 - **Missing resources.** Missing resources are reported as *not assessed*, *unavailable*, *bound* or *blocked*. These

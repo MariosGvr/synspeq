@@ -1,0 +1,31 @@
+{
+ "mol_id": "paracetamol",
+ "smiles": "CC(=O)Nc1ccc(O)cc1",
+ "solvable": true,
+ "n_steps": 1,
+ "trees": [
+  {
+   "type": "mol",
+   "smiles": "CC(=O)Nc1ccc(O)cc1",
+   "in_stock": false,
+   "children": [
+    {
+     "type": "reaction",
+     "children": [
+      {
+       "type": "mol",
+       "smiles": "Nc1ccc(O)cc1",
+       "in_stock": true
+      },
+      {
+       "type": "mol",
+       "smiles": "CC(=O)OC(C)=O",
+       "in_stock": true
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "error": null
+}

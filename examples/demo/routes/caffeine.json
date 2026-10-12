@@ -1,0 +1,8 @@
+{
+ "mol_id": "caffeine",
+ "smiles": "Cn1cnc2c1c(=O)n(C)c(=O)n2C",
+ "solvable": false,
+ "n_steps": null,
+ "trees": [],
+ "error": null
+}
