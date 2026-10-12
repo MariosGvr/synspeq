@@ -12,3 +12,6 @@ dist/
 registry.json
 .synspeq/
 !examples/demo/molecules.sdf
+data/
+demo_results/
+results/
