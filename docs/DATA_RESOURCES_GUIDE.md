@@ -81,3 +81,12 @@ synspeq scaffold-prior --real-dir data/REAL --seed 1 --out prior.tsv   # P4 refe
 Every queried molecule is recorded as hit or non-hit; a molecule that was never queried is *unknown*, never a non-hit.
 A pillar-3 result that depends on unknown molecules is reported as a bound (residual steps upper, REAL-needed lower).
 `.parquet` parts need `pip install pyarrow`.
+
+### Canonical SMILES depend on the RDKit version
+Catalogue matching compares canonical SMILES. Catalogues you import (`enamine_bb`, ...) are canonicalised by your own RDKit
+when they are loaded, so they always agree with the molecules being tested. REAL is not loaded; `real-scan` compares its
+strings as they are, and they were canonicalised by whichever RDKit version produced the file. A different RDKit version
+can write a different (equally valid) string for a small share of molecules, which then count as non-hits. In a test with
+RDKit 2023.09 against strings written by RDKit 2026.09, 12 of 4,533 routes (0.3%) changed frontier tier. If your RDKit
+differs from the one that wrote the file, add `--recanonicalise` to `real-scan`; it parses every catalogue line and is
+much slower. `real-merge` records the RDKit version used in `real_lookup/meta.json`.

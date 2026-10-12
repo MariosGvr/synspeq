@@ -311,7 +311,7 @@ def cmd_real_scan(a) -> int:
     files = catalogue_files(a.real_dir)
     files = files[a.shard::a.n_shards]
     queries = {l.strip() for l in open(a.queries) if l.strip()}
-    hits = scan_membership(queries, files, smiles_col=a.smiles_col)
+    hits = scan_membership(queries, files, smiles_col=a.smiles_col, already_canonical=not a.recanonicalise)
     with open(a.out, "w") as fh:
         for k, f in sorted(hits.items()):
             fh.write(f"{k}\t{f}\n")
@@ -328,6 +328,9 @@ def cmd_real_merge(a) -> int:
     lk = RealLookup.load(a.out) if os.path.isdir(a.out) else RealLookup()
     lk.add_scan(queries, hits)
     lk.save(a.out)
+    import rdkit
+    with open(os.path.join(a.out, "meta.json"), "w") as fh:
+        json.dump(dict(rdkit_version=rdkit.__version__, n_queried=len(lk.queried), n_hits=len(lk.hits)), fh, indent=1)
     print(f"lookup now holds {len(lk.queried)} queried molecules, {len(lk.hits)} hits -> {a.out}")
     return 0
 
@@ -423,6 +426,9 @@ def main(argv: Optional[list] = None) -> int:
     x.add_argument("--queries", required=True); x.add_argument("--real-dir", required=True)
     x.add_argument("--shard", type=int, default=0); x.add_argument("--n-shards", type=int, default=1)
     x.add_argument("--smiles-col", default="smiles"); x.add_argument("--out", required=True)
+    x.add_argument("--recanonicalise", action="store_true",
+                   help="canonicalise every catalogue SMILES with this RDKit before matching (slow; use when the catalogue was "
+                        "canonicalised by a different RDKit version)")
     x.set_defaults(func=cmd_real_scan)
     x = sp.add_parser("scaffold-prior", help="P4 reference scaffold prior: random draw of rows from random catalogue files (REAL)")
     x.add_argument("--real-dir", required=True); x.add_argument("--out", required=True)

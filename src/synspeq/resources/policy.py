@@ -59,7 +59,7 @@ class Resolution:
 
 def _fix(manifest: Manifest, rid: str) -> str:
     r = manifest.resources[rid]
-    how = f"synspeq data download {rid}" if r.automated else f"synspeq data import {rid} <path>"
+    how = (f"synspeq data download {rid} --dest <dir> --accept-terms" if r.automated else f"synspeq data import {rid} <path>")
     return f"{how}   ({r.get})"
 
 

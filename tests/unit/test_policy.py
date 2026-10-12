@@ -29,7 +29,7 @@ class UseCases(PolicyBase):
         r = self.run_()
         self.assertEqual(r.exit_code, 2)
         self.assertEqual(r.metrics["P1"].status, "blocked")
-        self.assertTrue(any("synspeq data download aizynth_zinc" in (m["fix"] or "") for m in r.messages))
+        self.assertTrue(any("synspeq data download aizynth_zinc --dest" in (m["fix"] or "") for m in r.messages))
 
     def test_uc1_default_core_present_runs_and_reports_not_assessed(self):
         self.core()

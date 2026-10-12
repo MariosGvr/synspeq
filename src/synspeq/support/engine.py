@@ -32,6 +32,10 @@ class Preprocessor:
         try:
             import os
             os.environ.setdefault("TQDM_DISABLE", "1")
+            import torch
+            # RXNMapper runs on CPU; unrestricted OpenMP threads oversubscribe a scheduler-limited allocation (observed
+            # ~100x slowdown on a shared node). One thread per process unless SYNSPEQ_TORCH_THREADS says otherwise.
+            torch.set_num_threads(int(os.environ.get("SYNSPEQ_TORCH_THREADS", "1")))
             from importlib.resources import files
             import pandas as pd
             from rxn_insight.utils import curate_smirks
