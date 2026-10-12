@@ -11,3 +11,4 @@ dist/
 *.h5
 registry.json
 .synspeq/
+!examples/demo/molecules.sdf
