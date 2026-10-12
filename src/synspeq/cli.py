@@ -266,7 +266,8 @@ def cmd_evaluate(a) -> int:
     if a.scaffold_prior:
         with open(a.scaffold_prior) as fh:
             prior = {l.split("\t")[0]: int(l.split("\t")[1]) for l in fh if l.strip()}
-    rep = evaluate(pop, outcomes, res, a.out, store.all(), real_lookup_dir=a.real_lookup, scaffold_prior=prior, cache_dir=os.path.join(store.root, "cache"))
+    rep = evaluate(pop, outcomes, res, a.out, store.all(), real_lookup_dir=a.real_lookup, scaffold_prior=prior, cache_dir=os.path.join(store.root, "cache"),
+                   verify_catalogue=getattr(a, "verify_catalogue", False))
     for line in res.banner:
         print("NOTE", line)
     p1 = rep.get("P1")
@@ -477,6 +478,7 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--pillars", default=None)
     e.add_argument("--resources", default=None, help="comma list of resource ids to enable, e.g. enamine_bb,enamine_real")
     e.add_argument("--planner-stock", default=None)
+    e.add_argument("--verify-catalogue", action="store_true", help="hash every REAL file and compare with the lookup (slow)")
     e.add_argument("--real-lookup", default=None, help="folder with hits.txt / queried.txt from `real-scan` + `real-merge`")
     e.add_argument("--scaffold-prior", default=None, help="TSV scaffold<TAB>count from a reference catalogue sample (P4 reference affinity)")
     e.set_defaults(func=cmd_evaluate)
@@ -497,6 +499,7 @@ def build_parser() -> argparse.ArgumentParser:
     rn.add_argument("--workers", type=_pos_int, default=1)
     rn.add_argument("--planner-stock", default=None, help="comma list of resources that form the planner stock (e.g. enamine_bb)")
     rn.add_argument("--real-lookup", default=None); rn.add_argument("--scaffold-prior", default=None)
+    rn.add_argument("--verify-catalogue", action="store_true")
     rn.set_defaults(func=cmd_run)
     x = sp.add_parser("report", help="re-render report.html from an evaluation folder's report.json")
     x.add_argument("dir"); x.set_defaults(func=cmd_report)

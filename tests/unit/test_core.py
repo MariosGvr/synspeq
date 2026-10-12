@@ -128,22 +128,22 @@ class Routes(unittest.TestCase):
         self.assertEqual(o.outcome, "direct_purchase")
 
     def test_routed_primary_is_first_instock_tree_not_first_tree(self):
-        partial = mol("T", [rxn(mol("A", stock=True), mol("B", stock=False))])             # non-stock leaf: not a route
-        good = mol("T", [rxn(mol("A", stock=True), mol("C", stock=True))])
-        o = classify_planner_json({"smiles": "T", "solvable": True, "n_steps": 1, "trees": [partial, good]})
+        partial = mol("CCCC", [rxn(mol("CCO", stock=True), mol("CCN", stock=False))])             # non-stock leaf: not a route
+        good = mol("CCCC", [rxn(mol("CCO", stock=True), mol("CCC", stock=True))])
+        o = classify_planner_json({"smiles": "CCCC", "solvable": True, "n_steps": 1, "trees": [partial, good]})
         self.assertEqual(o.outcome, "routed")
         self.assertEqual(o.n_trees, 2)
         self.assertEqual(o.n_instock_trees, 1)
-        self.assertEqual(o.routes[0], ("T>>A.C",))
+        self.assertEqual(o.routes[0], ("CCCC>>CCO.CCC",))
 
     def test_unresolved_error_and_inconsistent(self):
         self.assertEqual(classify_planner_json({"solvable": False, "trees": []}).outcome, "unresolved")
         self.assertEqual(classify_planner_json({"error": "boom"}).outcome, "execution_error")
-        t = mol("T", [rxn(mol("B", stock=False))])
+        t = mol("CCCC", [rxn(mol("CCN", stock=False))])
         self.assertEqual(classify_planner_json({"solvable": True, "n_steps": 1, "trees": [t]}).outcome, "found_no_saved_route")
 
     def test_duplicate_trees_collapse(self):
-        t = mol("T", [rxn(mol("A", stock=True))])
+        t = mol("CCCC", [rxn(mol("CCO", stock=True))])
         o = classify_planner_json({"solvable": True, "n_steps": 1, "trees": [t, t]})
         self.assertEqual(len(o.routes), 1)
 

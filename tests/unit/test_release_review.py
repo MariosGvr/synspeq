@@ -1,6 +1,6 @@
 """Regression tests for the independent pre-release review (findings F01-F22). Each test reproduces the review's input and
 asserts the value written down BEFORE looking at the code's answer (hand-computed or taken from the stated rule)."""
-import gzip, json, multiprocessing, os, re, shlex, tempfile, unittest
+import gzip, json, multiprocessing, os, re, shlex, shutil, tempfile, unittest
 from unittest import mock
 from rdkit import Chem
 from synspeq.cli import build_parser, main
@@ -37,6 +37,7 @@ def direct(smi, name=None):
 class Tmp(unittest.TestCase):
     def setUp(self):
         self.d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.d, ignore_errors=True)
 
     def p(self, *a):
         return os.path.join(self.d, *a)
@@ -97,6 +98,110 @@ class PlannerRecordBinding(Tmp):
         pop = make_population(read_sdf(sdf), "t")
         self.assertEqual(list(load_outcomes(pop, [self.p("r")]).values())[0].outcome, "direct_purchase")
         self.assertEqual(list(load_outcomes(pop, [self.p("r")], use_titles=False).values())[0].outcome, "pending")
+
+
+class SecondReview(Tmp):
+    """Findings of the review of the fixes."""
+
+    def test_R1_exact_id_record_in_a_later_folder_beats_a_title_record_in_an_earlier_one(self):
+        sdf = self.p("m.sdf")
+        write_sdf(sdf, [("ethanol", "CCO", {"pocket": "A"})])
+        pop = make_population(read_sdf(sdf), "t", pocket_field="pocket")
+        mid = pop.molecules[0].mol_id
+        os.makedirs(self.p("r1")); os.makedirs(self.p("r2"))
+        json.dump(direct("CCO", "ethanol"), open(self.p("r1", "ethanol.json"), "w"))                       # title record, earlier folder
+        json.dump({"mol_id": mid, "smiles": "CCO", "solvable": False, "trees": [], "error": None}, open(self.p("r2", mid + ".json"), "w"))
+        out = load_outcomes(pop, [self.p("r1"), self.p("r2")])
+        self.assertEqual(out[mid].outcome, "unresolved")                 # the exact record, not the title match
+
+    def test_R2_lookup_from_another_catalogue_is_refused(self):
+        from synspeq.purchasing.realscan import check_lookup_matches_catalogue
+        self.write("A/part0.smi", "CCO\n")
+        self.write("B/part0.smi", "CCO\nCCN\n")                         # different size
+        q = self.write("q.smi", "CCO\n")
+        scan_shard(q, self.p("A"), 0, 1, self.p("h.txt"))
+        merge_shards(q, [self.p("h.txt")], self.p("lk"))
+        check_lookup_matches_catalogue(self.p("lk"), self.p("A"))         # same catalogue: accepted
+        with self.assertRaises(ValueError):
+            check_lookup_matches_catalogue(self.p("lk"), self.p("B"))
+        os.makedirs(self.p("legacy"))
+        self.write("legacy/hits.txt", "CCO\n")
+        with self.assertRaises(ValueError):                                # no provenance at all
+            check_lookup_matches_catalogue(self.p("legacy"), self.p("A"))
+
+    def test_R3_same_names_and_sizes_but_other_content_is_a_different_catalogue(self):
+        self.write("A/part0.smi", "CCO\nCCN\n")
+        self.write("B/part0.smi", "CCC\nCCN\n")                         # same name, same size, different molecule
+        q = self.write("q.smi", "CCO\nCCC\n")
+        scan_shard(q, self.p("A"), 0, 1, self.p("hA.txt"))
+        merge_shards(q, [self.p("hA.txt")], self.p("lk"))
+        scan_shard(q, self.p("B"), 0, 1, self.p("hB.txt"))
+        with self.assertRaises(ValueError):
+            merge_shards(q, [self.p("hB.txt")], self.p("lk"))              # old hits must not survive a catalogue change
+        # and with content verification the active-catalogue check catches it too
+        from synspeq.purchasing.realscan import check_lookup_matches_catalogue
+        check_lookup_matches_catalogue(self.p("lk"), self.p("A"), verify_content=True)
+        with self.assertRaises(ValueError):
+            check_lookup_matches_catalogue(self.p("lk"), self.p("B"), verify_content=True)
+
+    def test_R4_truncated_or_edited_shard_file_is_refused(self):
+        self.write("REAL/part0.smi", "CCO\nCCN\n")
+        q = self.write("q.smi", "CCO\nCCN\nCCC\n")
+        scan_shard(q, self.p("REAL"), 0, 1, self.p("h.txt"))
+        lines = open(self.p("h.txt")).read().splitlines()
+        self.assertEqual(len(lines), 3)                                    # header + two hits
+        self.write("cut.txt", "\n".join(lines[:2]) + "\n")               # one hit line removed, header kept
+        with self.assertRaises(ValueError):
+            merge_shards(q, [self.p("cut.txt")], self.p("lk"))
+        self.write("edit.txt", "\n".join([lines[0], lines[1], "CCC\tpart0.smi"]) + "\n")   # a hit that was not there
+        with self.assertRaises(ValueError):
+            merge_shards(q, [self.p("edit.txt")], self.p("lk2"))
+
+    def test_R5_valid_last_row_without_newline_is_not_glued_to_the_next(self):
+        from synspeq.support.engine import FeatureCache
+        row = json.dumps({"rxn": "A>>B", "_db": "k", "prep_status": "ok"})
+        f = self.write("f.jsonl", row)                                     # complete JSON, no trailing newline
+        c = FeatureCache(f, "k")
+        self.assertIn("A>>B", c.rows)
+        c.get_or_compute("C>>D", lambda r: {"rxn": r, "prep_status": "ok"})
+        self.assertEqual(set(FeatureCache(f, "k").rows), {"A>>B", "C>>D"})   # restart still reads both rows
+        # the same when the loader did not repair the file (writer-side guard)
+        g = self.write("g.jsonl", row)
+        c2 = FeatureCache(self.p("h.jsonl"), "k")
+        c2.path = g
+        c2.get_or_compute("E>>F", lambda r: {"rxn": r, "prep_status": "ok"})
+        self.assertEqual(set(FeatureCache(g, "k").rows), {"A>>B", "E>>F"})
+
+    def test_R6_unparseable_molecule_strings_in_a_route_are_rejected(self):
+        t = mol("CCO", [rxn(mol("not_a_smiles", stock=True))])
+        o = classify_planner_json({"smiles": "CCO", "solvable": True, "n_steps": 1, "trees": [t]})
+        self.assertEqual(o.outcome, "execution_error")
+        self.assertIn("unparseable", o.error)
+
+
+class Workflows(Tmp):
+    """Documented workflows are executed, not only parsed: the README's demo, end to end through the installed entry point."""
+
+    def test_readme_demo_runs_and_prints_the_documented_numbers(self):
+        import contextlib, io
+        demo = os.path.join(ROOT, "examples", "demo")
+        store = self.p("store")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(main(["--data-dir", store, "data", "import", "enamine_bb", os.path.join(demo, "building_blocks.smi")]), 0)
+            rc = main(["--data-dir", store, "evaluate", os.path.join(demo, "molecules.sdf"), "--routes-dir", os.path.join(demo, "routes"),
+                       "--pocket-field", "pocket_id", "--pillars", "P1,P3,P4", "--resources", "enamine_bb", "--out", self.p("out")])
+        self.assertEqual(rc, 0)
+        text = out.getvalue()
+        readme = open(os.path.join(ROOT, "README.md")).read()
+        for line in ("P1  Find 83.3%  Find>=1 66.7%  distinct 6  complete=True",
+                     "P3  median residual steps 1  frontier found 50.0%  needs on-demand n/a (needs both tiers)",
+                     "P4  N50 1  unique scaffold ratio 0.250  CSR-AUC 1.000"):
+            self.assertIn(line, text)
+            self.assertIn(line.split("  needs on-demand")[0], readme)       # and the README shows the same numbers
+        rep = json.load(open(self.p("out", "report.json")))
+        self.assertEqual(rep["population"]["n_invalid_records"], 1)
+        self.assertEqual(rep["P1"]["counts"]["direct_purchase"], 1)
 
 
 class RecordSchema(Tmp):

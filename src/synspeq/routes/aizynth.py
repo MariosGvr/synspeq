@@ -22,6 +22,7 @@ Outcome vocabulary (exactly one per molecule):
 from __future__ import annotations
 import hashlib
 import json
+from functools import lru_cache
 import os
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
@@ -51,6 +52,13 @@ def reactions_of(tree: dict) -> List[str]:
     return out
 
 
+@lru_cache(maxsize=500_000)
+def _parses(smiles: str) -> bool:
+    from rdkit import Chem, RDLogger
+    RDLogger.DisableLog("rdApp.*")
+    return Chem.MolFromSmiles(smiles) is not None
+
+
 def _check_tree(n, depth=0) -> Optional[str]:
     """Molecule nodes alternate with reaction nodes; reactions have at least one reactant; leaves say whether they are in stock."""
     if depth > MAX_DEPTH:
@@ -61,6 +69,8 @@ def _check_tree(n, depth=0) -> Optional[str]:
         return f"expected a molecule node, got type={n.get('type')!r}"
     if not isinstance(n.get("smiles"), str) or not n["smiles"]:
         return "molecule node without a SMILES"
+    if not _parses(n["smiles"]):
+        return f"molecule node with an unparseable SMILES ({n['smiles'][:40]!r})"
     ch = n.get("children")
     if ch is None or ch == []:
         if not isinstance(n.get("in_stock"), bool):

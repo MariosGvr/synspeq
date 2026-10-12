@@ -8,6 +8,7 @@ search(): similarity of the query's MACCS-key presence pattern to every database
 """
 from __future__ import annotations
 import json
+import os
 import time
 import warnings
 from typing import Dict, List, Optional
@@ -132,6 +133,12 @@ def reaction_features(rxn: str, prep: Preprocessor, searcher: Searcher) -> dict:
     return row
 
 
+def _last_byte(path: str) -> bytes:
+    with open(path, "rb") as fh:
+        fh.seek(-1, 2)
+        return fh.read(1)
+
+
 class FeatureCache:
     """reaction string -> feature row, kept as JSON lines so interrupted runs resume. Rows carry the cache key (`_db`) of the
     database and software that produced them; rows with another key are ignored, never reused.
@@ -140,7 +147,6 @@ class FeatureCache:
     the last complete row. A corrupt line anywhere else is an error, because silently skipping it could hide data loss."""
 
     def __init__(self, path: str, db_tag: str):
-        import os
         self.path, self.db_tag, self.rows, self.recovered_truncated_tail = path, db_tag, {}, False
         if not os.path.exists(path):
             return
@@ -167,6 +173,9 @@ class FeatureCache:
         if self.recovered_truncated_tail:
             with open(path, "r+b") as fh:
                 fh.truncate(good_end)
+        elif data and not data.endswith(b"\n"):
+            with open(path, "ab") as fh:               # a complete last row whose newline was lost: restore it
+                fh.write(b"\n")
 
     def get_or_compute(self, rxn: str, fn):
         if rxn not in self.rows:
@@ -177,6 +186,8 @@ class FeatureCache:
             from ..locking import file_lock
             with file_lock(self.path + ".lock"):               # evaluators sharing an output folder append one row at a time
                 with open(self.path, "ab") as fh:
+                    if os.path.getsize(self.path) and _last_byte(self.path) != b"\n":
+                        fh.write(b"\n")                  # never glue two rows together
                     fh.write(line.encode("utf-8"))
                     fh.flush()
         return self.rows[rxn]

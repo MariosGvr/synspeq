@@ -35,17 +35,15 @@ def load_outcomes(pop: Population, routes_dirs, use_titles: bool = True) -> Dict
     """
     out: Dict[str, object] = {}
     for m in pop.molecules:
-        cands = [(m.mol_id, False)]
         name = m.source_record.name
-        if use_titles and _safe_component(name):
-            cands.append((name, True))
+        # an exact molecule-id record in ANY folder wins over a title match in any folder
+        cands = [m.mol_id] + ([name] if use_titles and _safe_component(name) else [])
         path = None
-        by_title = False
-        for d in routes_dirs:
-            for c, is_title in cands:
+        for c in cands:
+            for d in routes_dirs:
                 f = os.path.join(d, f"{c}.json")
                 if os.path.isfile(f) and _contained(d, f):
-                    path, by_title = f, is_title
+                    path = f
                     break
             if path:
                 break
@@ -60,7 +58,7 @@ def _status(res: Resolution, p: str):
 
 def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_dir: str, store_entries: dict,
              real_lookup_dir: Optional[str] = None, scaffold_prior: Optional[dict] = None, n_sub: int = 3000,
-             cache_dir: Optional[str] = None) -> dict:
+             cache_dir: Optional[str] = None, verify_catalogue: bool = False) -> dict:
     os.makedirs(out_dir, exist_ok=True)
     report: dict = dict(synspeq_version=__version__, identity_policy=POLICY_ID, population=pop.accounting(),
                         resources={k: dict(state=s.state, path=(os.path.basename(s.path.rstrip(os.sep)) if s.path else None), requested_by=s.requested_by, **{x: store_entries.get(k, {}).get(x) for x in ("sha256", "size_bytes", "snapshot_date", "listing_sha256")})
@@ -96,6 +94,9 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
             raise ValueError(f"--real-lookup {real_lookup_dir!r} is not a folder (create it with `synspeq real-merge`)")
         if res.states["enamine_real"].state in ("ready", "partial"):
             real = RealLookup.load(real_lookup_dir) if real_lookup_dir else RealLookup()
+            if real_lookup_dir:
+                from .purchasing.realscan import check_lookup_matches_catalogue
+                check_lookup_matches_catalogue(real_lookup_dir, res.states["enamine_real"].path, verify_content=verify_catalogue)
         cat = Catalogue(bb, real)
         if real is not None:
             q = frontier_queries(outcomes, cat)
