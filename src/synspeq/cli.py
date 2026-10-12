@@ -2,8 +2,8 @@
 
   synspeq data list|info|import|check|download|status
   synspeq validate <molecules.sdf|.csv|.smi> [--pocket-field F] [--first N | --last N]
-  synspeq p1-replay <molecules> --routes-dir DIR [--routes-dir DIR2 ...]   (cached AiZynthFinder records named <record name>.json)
-Exit codes: 0 ok; 2 a requested/core resource is missing or a metric is blocked (nothing was computed).
+  synspeq p1-replay <molecules> --routes-dir DIR [--routes-dir DIR2 ...]   (cached AiZynthFinder records: <mol_id>.json or <title>.json)
+Exit codes: 0 ok; 2 a requested/core resource is missing, an input is unusable, or a metric is blocked (nothing was computed).
 """
 from __future__ import annotations
 import argparse
@@ -19,7 +19,40 @@ from .io import read_sdf, read_table
 from .metrics import compute_p1
 from .populations import make_population
 from .resources import Store, load_manifest, resolve
-from .routes import load_outcome
+
+
+def _pos_int(v):
+    try:
+        n = int(v)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"{v!r} is not an integer")
+    if n < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1, got {n}")
+    return n
+
+
+def _nonneg_int(v):
+    n = int(v)
+    if n < 0:
+        raise argparse.ArgumentTypeError(f"must be >= 0, got {n}")
+    return n
+
+
+def _config_and_store(a, extra=None):
+    """Configuration first, then the store: command line > config file > $SYNSPEQ_DATA_DIR > ./.synspeq."""
+    ov = dict(on_missing=getattr(a, "on_missing", None), profile=getattr(a, "profile", None),
+              pillars=a.pillars.split(",") if getattr(a, "pillars", None) else None,
+              resources=a.resources.split(",") if getattr(a, "resources", None) else None,
+              planner_stock=a.planner_stock.split(",") if getattr(a, "planner_stock", None) else None,
+              pocket_field=getattr(a, "pocket_field", None))
+    ov.update(extra or {})
+    cfg = load_config(getattr(a, "config", None), ov)
+    return cfg, Store(a.data_dir or cfg.get("data_dir"))
+
+
+def _print_messages(res):
+    for m in res.messages:
+        print(f"[{m['level']}] {m['scope']}: {m['text']}" + (f"\n        fix: {m['fix']}" if m.get("fix") else ""), file=sys.stderr)
 
 
 def _read_any(path: str, pocket_field=None, smiles_col="smiles", name_col="mol_id"):
@@ -59,7 +92,7 @@ def _fetch(r, dest: str, store: Store) -> int:
         print(f"size mismatch (got {n}, expected {r.fetch['size']}); file removed", file=sys.stderr)
         return 2
     os.replace(tmp, path)
-    e = store.register(r.id, path, fmt=r.format, terms_acknowledged=True)
+    e = store.register(r.id, path, fmt=r.format, terms_acknowledged=True, check=r.check or None)
     print(f"downloaded and registered {r.id} -> {path} (md5 verified)")
     return 0
 
@@ -67,7 +100,10 @@ def _fetch(r, dest: str, store: Store) -> int:
 # ------------------------------------------------------------------ data
 def cmd_data(a) -> int:
     man = load_manifest()
-    store = Store(a.data_dir)
+    if a.data_cmd == "check":
+        cfg, store = _config_and_store(a)
+    else:
+        store = Store(a.data_dir)
     sub = a.data_cmd
     if sub == "list":
         reg = store.all()
@@ -96,7 +132,8 @@ def cmd_data(a) -> int:
             print(f"Terms for {r.id}: {r.terms}")
             if r.warn:
                 print(f"Note: {r.warn}")
-        e = store.register(a.id, a.path, fmt=r.format, hash_it=not a.no_hash, snapshot_date=a.snapshot_date, terms_acknowledged=a.accept_terms)
+        e = store.register(a.id, a.path, fmt=r.format, hash_it=not a.no_hash, snapshot_date=a.snapshot_date, terms_acknowledged=a.accept_terms,
+                           check=r.check or None)
         v = e["validation"]
         print(f"registered {a.id} -> {e['path']}  validation: {v.get('status')}" + (f" ({v.get('reason')})" if v.get("reason") else ""))
         return 0 if v.get("status") in ("ok", "unchecked") else 2
@@ -104,8 +141,6 @@ def cmd_data(a) -> int:
         print(json.dumps(store.all(), indent=1))
         return 0
     if sub == "check":
-        cfg = load_config(a.config, dict(on_missing=a.on_missing, profile=a.profile, pillars=a.pillars.split(",") if a.pillars else None,
-                                        resources=a.resources.split(",") if a.resources else None))
         res = resolve(cfg, man, store, mode=a.mode)
         print("resources")
         for s in res.states.values():
@@ -132,7 +167,7 @@ def cmd_data(a) -> int:
             members[rid] = e["path"]
         flags = {rid: man.resources[rid].flags for rid in ids if rid in man.resources}
         out = build_union(members, a.out, flags)
-        store.register("user_union_stock", out["file"], fmt="aizynthfinder_hdf5", terms_acknowledged=True)
+        store.register("user_union_stock", out["file"], fmt=None, terms_acknowledged=True)
         print(f"union of {len(ids)} catalogues: {out['n_unique_inchikeys']:,} unique InChIKeys -> {out['file']}")
         for rid, info in out["members"].items():
             print(f"  {rid:18} records {info['n_records']:>10,}  unparseable {info['n_unparseable']:>7,}  unique {info['n_unique_keys']:>10,}  new {info['new_keys_added']:>10,}")
@@ -163,7 +198,8 @@ def cmd_data(a) -> int:
                 dest = os.path.abspath(a.dest)
                 stock = os.path.join(dest, "zinc_stock.hdf5")
                 if os.path.exists(os.path.join(dest, "config.yml")):
-                    e = store.register("aizynth_models", dest, fmt=man.resources["aizynth_models"].format, terms_acknowledged=True)
+                    e = store.register("aizynth_models", dest, fmt=man.resources["aizynth_models"].format, terms_acknowledged=True,
+                                       check=man.resources["aizynth_models"].check or None)
                     print(f"registered aizynth_models -> {dest}  validation: {e['validation'].get('status')}")
                 if os.path.exists(stock):
                     e = store.register("aizynth_zinc", stock, fmt=man.resources["aizynth_zinc"].format, terms_acknowledged=True)
@@ -194,13 +230,9 @@ def cmd_validate(a) -> int:
 
 
 def cmd_p1(a) -> int:
+    from .pipeline import load_outcomes
     pop = _population(a)
-    dirs = a.routes_dir
-    outcomes = {}
-    for m in pop.molecules:
-        name = m.source_record.name
-        path = next((os.path.join(d, f"{name}.json") for d in dirs if name and os.path.exists(os.path.join(d, f"{name}.json"))), None)
-        outcomes[m.mol_id] = load_outcome(path)
+    outcomes = load_outcomes(pop, a.routes_dir)
     res = compute_p1(pop, outcomes)
     out = dict(synspeq_version=__version__, population=pop.accounting(), p1=res)
     if a.out:
@@ -216,18 +248,19 @@ def cmd_p1(a) -> int:
 def cmd_evaluate(a) -> int:
     from .pipeline import evaluate, load_outcomes
     man = load_manifest()
-    store = Store(a.data_dir)
-    cfg = load_config(a.config, dict(on_missing=a.on_missing, profile=a.profile, pillars=a.pillars.split(",") if a.pillars else None, pocket_field=a.pocket_field,
-                                    resources=a.resources.split(",") if a.resources else None))
+    cfg, store = _config_and_store(a)
     res = resolve(cfg, man, store, mode="replay")
-    for m in res.messages:
-        print(f"[{m['level']}] {m['scope']}: {m['text']}" + (f"\n        fix: {m['fix']}" if m.get("fix") else ""), file=sys.stderr)
+    _print_messages(res)
     if res.exit_code:
         print("blocked: nothing was computed (see messages above)", file=sys.stderr)
         return res.exit_code
     pf = a.pocket_field or cfg.get("pocket_field")
     recs = _read_any(a.input, smiles_col=a.smiles_col, name_col=a.name_col)
     pop = make_population(recs, os.path.basename(a.input), pf, first=a.first, last=a.last)
+    acc = pop.accounting()
+    if acc.get("n_valid_records_without_pocket"):
+        print(f"NOTE {acc['n_valid_records_without_pocket']} valid record(s) have no value for {pf!r}; they are evaluated as one "
+              "group without a pocket", file=sys.stderr)
     outcomes = load_outcomes(pop, a.routes_dir)
     prior = None
     if a.scaffold_prior:
@@ -244,41 +277,60 @@ def cmd_evaluate(a) -> int:
         print(f"P2  supported (primary) {_fmt_pct(p2['primary']['conditional'])} of routed, (any saved) {_fmt_pct(p2['any_saved']['conditional'])}")
     p3 = rep.get("P3")
     if p3 and p3.get("n_routed"):
-        print(f"P3  median residual steps {p3['median_residual_steps']}  frontier found {_fmt_pct(p3['frontier_found'])}  needs on-demand {_fmt_pct(p3['needs_on_demand'])}")
+        od = p3.get("needs_on_demand")
+        od_txt = "n/a (needs both tiers)" if od is None else (("at least " if p3.get("needs_on_demand_status") == "bound" else "") + _fmt_pct(od))
+        bnd = " (bound: some intermediates were never looked up in REAL)" if p3.get("frontier_status") == "bound" else ""
+        print(f"P3  median residual steps {p3['median_residual_steps']}  frontier found {_fmt_pct(p3['frontier_found'])}  needs on-demand {od_txt}{bnd}")
     p4 = rep.get("P4")
     if p4:
         b = p4["routed"]
-        print(f"P4  N50 {b['n50']}  unique scaffold ratio {b['unique_scaffold_ratio']:.3f}  CSR-AUC {b['csr_auc']:.3f}" if b["n_molecules"] else "P4  no routed molecules")
+        if not b["n_molecules"]:
+            print("P4  no routed molecules")
+        elif b["n50"] is None:
+            print(f"P4  N50 n/a  CSR-AUC n/a  (no cyclic molecule among {b['n_molecules']} routed molecules)")
+        else:
+            print(f"P4  N50 {b['n50']}  unique scaffold ratio {b['unique_scaffold_ratio']:.3f}  CSR-AUC {b['csr_auc']:.3f}")
     print(f"wrote {a.out}/report.html, report.json, molecules.csv, run_manifest.json")
     return 0
 
 
-def _planner_config(res, man, store, out_dir: str) -> Optional[str]:
-    """AiZynthFinder config from the resolved resources: models dir (config.yml) + every enabled planner-stock file."""
+def _planner_config(res, man, store, out_dir: str):
+    """AiZynthFinder config from the resolved resources: models dir (config.yml) + the planner stock, every member converted
+    to an InChIKey stock when it is not one already. Returns (config_path, {resource id: stock file used})."""
     from .planners import build_config
+    from .resources.stocks import compiled_planner_stock
     models = res.states["aizynth_models"]
     if models.state != "ready":
-        return None
+        return None, {}
     mc = os.path.join(models.path, "config.yml") if os.path.isdir(models.path) else models.path
+    cache = os.path.join(store.root, "cache")
     stocks = {}
-    for rid, st in res.states.items():
-        if st.state == "ready" and "planner_stock" in man.resources[rid].provides:
-            p = st.path
-            if os.path.isdir(p):                       # the AiZynthFinder data folder holds zinc_stock.hdf5
-                p = os.path.join(p, "zinc_stock.hdf5")
-            stocks[rid] = p
-    return build_config(mc, stocks, os.path.join(out_dir, "aizynth_config.yml")) if stocks else None
+    for rid in res.planner_stocks:
+        st = res.states[rid]
+        stocks[rid] = compiled_planner_stock(rid, st.path, cache, os.path.join(store.root, "file_hashes.json"), man.resources[rid].flags)
+    if not stocks:
+        return None, {}
+    return build_config(mc, stocks, os.path.join(out_dir, "aizynth_config.yml")), stocks
 
 
-def _check_plan_fingerprint(out_dir: str, res, entries: dict) -> int:
-    """Planner records are reused when a run is repeated; refuse to mix records made with another stock, model set or settings."""
+def _check_plan_fingerprint(out_dir: str, res, store, stock_files: dict) -> int:
+    """Planner records are reused when a run is repeated. The fingerprint is made of the CONTENT of the model files and of every
+    stock file actually given to the planner, the search settings and the planner version; a folder made under another
+    fingerprint is refused instead of being mixed."""
     import hashlib
+    from .hashing import content_id, file_sha256
     from .planners import PLANNER_SETTINGS
-    parts = {rid: (st.path and os.path.basename(st.path.rstrip(os.sep)), (entries.get(rid) or {}).get("sha256") or (entries.get(rid) or {}).get("listing_sha256")
-                   or (entries.get(rid) or {}).get("size_bytes"))
-             for rid, st in res.states.items() if st.state == "ready" and rid in ("aizynth_models", "aizynth_zinc", "user_union_stock", "zinc20_tranches",
-                                                                                 "askcos_buyables", "enamine_bb", "emolecules_bb", "molport")}
-    fp = hashlib.sha256(json.dumps(dict(settings=PLANNER_SETTINGS, resources=parts), sort_keys=True, default=str).encode()).hexdigest()
+    from importlib import metadata
+    hc = os.path.join(store.root, "file_hashes.json")
+    models = res.states["aizynth_models"]
+    try:
+        ver = metadata.version("aizynthfinder")
+    except metadata.PackageNotFoundError:
+        ver = None
+    parts = dict(models=content_id(models.path, hc, exclude=("zinc_stock.hdf5",)),
+                 stocks={rid: file_sha256(p, hc) for rid, p in sorted(stock_files.items())},
+                 settings=PLANNER_SETTINGS, aizynthfinder=ver)
+    fp = hashlib.sha256(json.dumps(parts, sort_keys=True, default=str).encode()).hexdigest()
     path = os.path.join(out_dir, "plan_fingerprint.json")
     if os.path.exists(path):
         old = json.load(open(path)).get("fingerprint")
@@ -288,7 +340,7 @@ def _check_plan_fingerprint(out_dir: str, res, entries: dict) -> int:
             return 2
     else:
         with open(path, "w") as fh:
-            json.dump(dict(fingerprint=fp, settings=PLANNER_SETTINGS, resources=parts), fh, indent=1, default=str)
+            json.dump(dict(fingerprint=fp, **parts), fh, indent=1, default=str)
     return 0
 
 
@@ -296,26 +348,23 @@ def cmd_plan(a) -> int:
     """Plan every distinct molecule with AiZynthFinder (resumable; one chunk per SLURM array task)."""
     from .planners import plan_population
     man = load_manifest()
-    store = Store(a.data_dir)
-    cfg = load_config(a.config, dict(on_missing=a.on_missing, pillars=["P1"], resources=a.resources.split(",") if a.resources else None,
-                                    pocket_field=a.pocket_field))
+    cfg, store = _config_and_store(a, dict(pillars=["P1"]))
     res = resolve(cfg, man, store, mode="plan")
-    for m in res.messages:
-        print(f"[{m['level']}] {m['scope']}: {m['text']}" + (f"\n        fix: {m['fix']}" if m.get("fix") else ""), file=sys.stderr)
+    _print_messages(res)
     if res.exit_code:
         print("blocked: the planner needs AiZynthFinder models and a stock (see above)", file=sys.stderr)
         return res.exit_code
     os.makedirs(a.out, exist_ok=True)
-    conf = _planner_config(res, man, store, a.out)
+    conf, stock_files = _planner_config(res, man, store, a.out)
     pf = a.pocket_field or cfg.get("pocket_field")
     pop = make_population(_read_any(a.input, smiles_col=a.smiles_col, name_col=a.name_col), os.path.basename(a.input), pf, first=a.first, last=a.last)
     items = [(m.mol_id, m.identity) for m in pop.molecules]
-    rc = _check_plan_fingerprint(a.out, res, store.all())
+    rc = _check_plan_fingerprint(a.out, res, store, stock_files)
     if rc:
         return rc
     info = plan_population(items, conf, a.out, workers=a.workers, chunk=a.chunk, n_chunks=a.n_chunks)
     with open(os.path.join(a.out, f"plan_manifest_chunk{a.chunk}.json"), "w") as fh:
-        json.dump(dict(synspeq_version=__version__, config=conf, population=pop.accounting(), **info), fh, indent=1)
+        json.dump(dict(synspeq_version=__version__, config=conf, stocks=stock_files, population=pop.accounting(), **info), fh, indent=1)
     print(f"planned {info['planned']} (skipped {info['skipped']}, errors {info['errors']}) of {info['n_molecules']} in {info['seconds']} s -> {a.out}")
     return 0
 
@@ -341,32 +390,22 @@ def cmd_report(a) -> int:
 
 
 def cmd_real_scan(a) -> int:
-    from .purchasing import scan_membership
-    from .purchasing.catalogue import catalogue_files
-    files = catalogue_files(a.real_dir)
-    files = files[a.shard::a.n_shards]
-    queries = {l.strip() for l in open(a.queries) if l.strip()}
-    hits = scan_membership(queries, files, smiles_col=a.smiles_col, already_canonical=not a.recanonicalise)
-    with open(a.out, "w") as fh:
-        for k, f in sorted(hits.items()):
-            fh.write(f"{k}\t{f}\n")
-    print(f"shard {a.shard}/{a.n_shards}: {len(files)} files scanned, {len(hits)}/{len(queries)} queries found -> {a.out}")
+    from .purchasing.realscan import scan_shard
+    m = scan_shard(a.queries, a.real_dir, a.shard, a.n_shards, a.out, smiles_col=a.smiles_col, recanonicalise=a.recanonicalise)
+    print(f"shard {m['shard']}/{m['n_shards']}: {m['n_files_in_shard']} files scanned, {m['n_hits']}/{m['n_queries']} queries found -> {a.out}")
     return 0
 
 
 def cmd_real_merge(a) -> int:
-    from .purchasing import RealLookup
-    queries = {l.strip() for l in open(a.queries) if l.strip()}
-    hits = set()
-    for f in a.hits:
-        hits |= {l.split("\t")[0].strip() for l in open(f) if l.strip()}
-    lk = RealLookup.load(a.out) if os.path.isdir(a.out) else RealLookup()
-    lk.add_scan(queries, hits)
-    lk.save(a.out)
-    import rdkit
-    with open(os.path.join(a.out, "meta.json"), "w") as fh:
-        json.dump(dict(rdkit_version=rdkit.__version__, n_queried=len(lk.queried), n_hits=len(lk.hits)), fh, indent=1)
-    print(f"lookup now holds {len(lk.queried)} queried molecules, {len(lk.hits)} hits -> {a.out}")
+    from .purchasing.realscan import merge_shards
+    s = merge_shards(a.queries, a.hits, a.out)
+    if s["complete"]:
+        print(f"scan complete ({s['n_shards']} of {s['n_shards']} shards): {s['n_hits']} hits; the other {s['n_queries'] - s['n_hits']} "
+              f"queries are recorded as non-hits -> {a.out}")
+    else:
+        missing = sorted(set(range(s["n_shards"])) - set(s["shards_present"]))
+        print(f"scan INCOMPLETE ({len(s['shards_present'])} of {s['n_shards']} shards; missing {missing[:20]}): {s['n_hits']} hits kept, "
+              f"all other queries stay UNKNOWN -> {a.out}", file=sys.stderr)
     return 0
 
 
@@ -390,7 +429,7 @@ def cmd_prior(a) -> int:
     return 0
 
 
-def main(argv: Optional[list] = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="synspeq", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", action="version", version=f"synspeq {__version__}")
     ap.add_argument("--data-dir", default=None, help="resource store (default: $SYNSPEQ_DATA_DIR, else ./.synspeq in the current directory)")
@@ -413,6 +452,7 @@ def main(argv: Optional[list] = None) -> int:
     x.add_argument("--config"); x.add_argument("--profile", default=None); x.add_argument("--on-missing", default=None, choices=["stop", "skip"])
     x.add_argument("--pillars", default=None, help="comma list, e.g. P1,P2")
     x.add_argument("--resources", default=None, help="comma list of resource ids to enable")
+    x.add_argument("--planner-stock", default=None)
     x.add_argument("--mode", default="plan", choices=["plan", "replay"])
     d.set_defaults(func=cmd_data)
 
@@ -422,8 +462,8 @@ def main(argv: Optional[list] = None) -> int:
         p.add_argument("--smiles-col", default="smiles")
         p.add_argument("--name-col", default="mol_id")
         g = p.add_mutually_exclusive_group()
-        g.add_argument("--first", type=int, default=None)
-        g.add_argument("--last", type=int, default=None)
+        g.add_argument("--first", type=_pos_int, default=None, help="keep the first N rows (per pocket); N >= 1")
+        g.add_argument("--last", type=_pos_int, default=None, help="keep the last N rows (per pocket); N >= 1")
     v = sp.add_parser("validate", help="ingestion audit: valid/invalid records, raw and distinct counts")
     common(v); v.set_defaults(func=cmd_validate)
     r = sp.add_parser("p1-replay", help="Pillar 1 from cached AiZynthFinder records")
@@ -436,6 +476,7 @@ def main(argv: Optional[list] = None) -> int:
     e.add_argument("--config"); e.add_argument("--profile", default=None); e.add_argument("--on-missing", default=None, choices=["stop", "skip"])
     e.add_argument("--pillars", default=None)
     e.add_argument("--resources", default=None, help="comma list of resource ids to enable, e.g. enamine_bb,enamine_real")
+    e.add_argument("--planner-stock", default=None)
     e.add_argument("--real-lookup", default=None, help="folder with hits.txt / queried.txt from `real-scan` + `real-merge`")
     e.add_argument("--scaffold-prior", default=None, help="TSV scaffold<TAB>count from a reference catalogue sample (P4 reference affinity)")
     e.set_defaults(func=cmd_evaluate)
@@ -444,22 +485,24 @@ def main(argv: Optional[list] = None) -> int:
     pl.add_argument("--out", required=True)
     pl.add_argument("--config"); pl.add_argument("--on-missing", default=None, choices=["stop", "skip"])
     pl.add_argument("--resources", default=None)
-    pl.add_argument("--workers", type=int, default=1)
-    pl.add_argument("--chunk", type=int, default=0); pl.add_argument("--n-chunks", type=int, default=1)
+    pl.add_argument("--workers", type=_pos_int, default=1)
+    pl.add_argument("--chunk", type=_nonneg_int, default=0); pl.add_argument("--n-chunks", type=_pos_int, default=1)
+    pl.add_argument("--planner-stock", default=None, help="comma list of resources that form the planner stock (e.g. enamine_bb)")
     pl.set_defaults(func=cmd_plan)
     rn = sp.add_parser("run", help="plan, then evaluate (SDF to report in one command)")
     common(rn)
     rn.add_argument("--out", required=True)
     rn.add_argument("--config"); rn.add_argument("--profile", default=None); rn.add_argument("--on-missing", default=None, choices=["stop", "skip"])
     rn.add_argument("--pillars", default=None); rn.add_argument("--resources", default=None)
-    rn.add_argument("--workers", type=int, default=1)
+    rn.add_argument("--workers", type=_pos_int, default=1)
+    rn.add_argument("--planner-stock", default=None, help="comma list of resources that form the planner stock (e.g. enamine_bb)")
     rn.add_argument("--real-lookup", default=None); rn.add_argument("--scaffold-prior", default=None)
     rn.set_defaults(func=cmd_run)
     x = sp.add_parser("report", help="re-render report.html from an evaluation folder's report.json")
     x.add_argument("dir"); x.set_defaults(func=cmd_report)
     x = sp.add_parser("real-scan", help="one shard of the REAL membership scan for the queries written by evaluate")
     x.add_argument("--queries", required=True); x.add_argument("--real-dir", required=True)
-    x.add_argument("--shard", type=int, default=0); x.add_argument("--n-shards", type=int, default=1)
+    x.add_argument("--shard", type=_nonneg_int, default=0); x.add_argument("--n-shards", type=_pos_int, default=1)
     x.add_argument("--smiles-col", default="smiles"); x.add_argument("--out", required=True)
     x.add_argument("--recanonicalise", action="store_true",
                    help="canonicalise every catalogue SMILES with this RDKit before matching (slow; use when the catalogue was "
@@ -473,8 +516,16 @@ def main(argv: Optional[list] = None) -> int:
     x = sp.add_parser("real-merge", help="merge shard hit files into a REAL lookup folder")
     x.add_argument("--queries", required=True); x.add_argument("--hits", nargs="+", required=True); x.add_argument("--out", required=True)
     x.set_defaults(func=cmd_real_merge)
-    a = ap.parse_args(argv)
-    return a.func(a)
+    return ap
+
+
+def main(argv: Optional[list] = None) -> int:
+    a = build_parser().parse_args(argv)
+    try:
+        return a.func(a)
+    except (OSError, EOFError, ValueError) as e:      # unusable input or configuration: a message, not a traceback
+        print(f"synspeq: error: {type(e).__name__}: {e}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

@@ -118,9 +118,13 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
     if p3 and p3.get("n_routed"):
         parts.append("<h2>Pillar 3: deliverability</h2>")
         t = p3["tiers_available"]
-        parts.append('<div class="cards">' + card(num(p3["median_residual_steps"]), "median residual steps") + card(num(p3["median_route_steps"]), "median route steps") +
-                     card(pct(p3["frontier_found"]), "route has a purchasable intermediate") +
-                     card(pct(p3["needs_on_demand"]) if t["on_demand"] and t["stocked"] else "n/a", "frontier is on-demand (REAL)") + "</div>")
+        od_status = p3.get("needs_on_demand_status", "value")
+        od_card = ("n/a" if p3.get("needs_on_demand") is None else
+                   (("at least " if od_status == "bound" else "") + pct(p3["needs_on_demand"])))
+        parts.append('<div class="cards">' + card(num(p3["median_residual_steps"]), "median residual steps" + (" (upper bound)" if p3.get("frontier_status") == "bound" else "")) +
+                     card(num(p3["median_route_steps"]), "median route steps") +
+                     card(pct(p3["frontier_found"]), "route has a purchasable intermediate" + (" (lower bound)" if p3.get("frontier_status") == "bound" else "")) +
+                     card(od_card, "frontier is on-demand (REAL)" + (" (not assessed: needs both tiers)" if od_status == "not_assessed" else "")) + "</div>")
         used = " and ".join(x for x, ok in (("stocked catalogue", t["stocked"]), ("on-demand catalogue", t["on_demand"])) if ok)
         parts.append(f'<p class="note">Frontier defined by: {E(used)}. Strict matching (canonical isomeric SMILES). '
                      "'None' means not in the configured catalogues, not unbuyable anywhere. Describes routed molecules only.</p>")
@@ -139,7 +143,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
             rows.append([lab, num(b["n_molecules"]), num(b["n_acyclic"]), num(b["n_distinct_scaffolds"]),
                          "n/a" if b["unique_scaffold_ratio"] is None else f"{b['unique_scaffold_ratio']:.3f}", num(b["n50"]),
                          "n/a" if b["n50_subsample_mean"] is None else f"{b['n50_subsample_mean']:.0f}",
-                         f"{b['csr_auc']:.3f}", "n/a" if b.get("reference_affinity") is None else f"{b['reference_affinity']:.3f}"])
+                         "n/a" if b["csr_auc"] is None else f"{b['csr_auc']:.3f}", "n/a" if b.get("reference_affinity") is None else f"{b['reference_affinity']:.3f}"])
         parts.append(table(["set", "molecules", "acyclic", "scaffolds", "unique ratio", "N50", f"N50 ({p4['routed']['subsample_n']:,}-subsample)", "CSR-AUC", "reference affinity"], rows))
         parts.append('<p class="note">Generic Bemis–Murcko scaffolds; acyclic molecules are excluded from scaffold statistics. A small N50 means collapse onto few cores. '
                      "The subsample N50 is only reported for sets at least as large as the subsample. Coverage on the routed set reflects which molecules were findable.</p>")

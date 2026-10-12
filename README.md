@@ -60,13 +60,15 @@ several processes (`--workers`) or SLURM array tasks (`synspeq plan --chunk i --
 `synspeq evaluate` on the resulting records.
 
 **4. Add purchasing information (Pillar 3, optional)**
-Pillar 3 needs a catalogue beyond the planner stock, for example Enamine building blocks:
+Pillar 3 needs a purchasing catalogue beyond the planner stock, for example Enamine building blocks (they are used as a
+purchasing catalogue only; the planner stock stays AiZynthFinder's ZINC stock unless you list them under `--planner-stock`):
 ```bash
 synspeq data import enamine_bb data/Enamine_Building_Blocks_Stock.sdf
 synspeq run molecules.sdf --pocket-field pocket_id --resources enamine_bb --out results/
 ```
-Planner records in `results/routes` are reused when a run is repeated with the same stock, models and settings, so only
-the added pillar is computed. If the stock changes, SYNSPEQ refuses to reuse the folder; give it a new `--out`.
+Planner records in `results/routes` and Pillar 2 reaction features are reused when a run is repeated with the same stock,
+model files and settings; the summaries are recomputed. If the stock or models change, SYNSPEQ refuses to reuse the folder;
+give it a new `--out`.
 
 To evaluate saved JSON from a previous AiZynthFinder run without rerunning planning:
 
@@ -98,8 +100,8 @@ metadata in `run_manifest.json`. The manifest records the resources used, includ
 ## Reporting conventions
 - **Missing resources.** Missing resources are reported as *not assessed*, *unavailable*, *bound* or *blocked*. These
   states are not reported as 0%.
-- **Stock selection.** If the configured stock is missing, SYNSPEQ stops without substituting another stock. With
-  `on_missing: skip` it continues with the remaining configured stocks and marks the stock set as incomplete.
+- **Stock selection.** If a configured planner stock or the planner models are missing, SYNSPEQ stops without substituting
+  another stock. `on_missing: skip` does not apply to them; it only lets other missing resources be marked as unavailable.
 - **Denominators.** Each metric identifies the population used as its denominator: raw rows, distinct molecules or
   routed molecules.
 - **Retrieved precedent is not experimental feasibility.** Pillar 2 reports retrieved precedent support. "No qualifying

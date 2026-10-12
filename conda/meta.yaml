@@ -25,6 +25,7 @@ requirements:
     - pandas
     - pyyaml
     - pyarrow
+    - pytables
 
 test:
   imports:

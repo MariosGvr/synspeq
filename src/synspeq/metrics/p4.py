@@ -13,13 +13,14 @@ def _block(mols, prior: Optional[dict], n_sub: int, pocket_min: int = 20):
     by: Dict[Optional[str], list] = {}
     for m, s in zip(mols, sc):
         by.setdefault(m.pocket, []).append(s)
-    per_pocket = [n50_csr(v)[0] for k, v in by.items() if k is not None and len(v) >= pocket_min]
+    per_pocket = [x for x in (n50_csr(v)[0] for k, v in by.items() if k is not None and len(v) >= pocket_min) if x is not None]
     return dict(
         n_molecules=n, n_cyclic=n_cyc, n_acyclic=n - n_cyc - sum(1 for s in sc if s is None), n_scaffold_failures=sum(1 for s in sc if s is None),
         n_distinct_scaffolds=nd,
         unique_scaffold_ratio=(nd / n) if n else None,                       # distinct scaffolds / all molecules in the set
         unique_scaffold_ratio_cyclic=(nd / n_cyc) if n_cyc else None,         # excluding acyclic molecules
         n50=n50, csr_auc=csr,
+        summary_status=("value" if n_cyc else "undefined: no cyclic molecules"),
         n50_subsample_mean=subsample_n50(sc, n_sub), subsample_n=n_sub,
         n50_per_pocket_median=median(per_pocket) if per_pocket else None, n_pockets_with_min=len(per_pocket), pocket_min=pocket_min,
         reference_affinity=(cosine_to_prior(sc, prior) if prior else None),

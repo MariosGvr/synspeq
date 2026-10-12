@@ -124,7 +124,10 @@ def _worker(args):
         path = os.path.join(out_dir, f"{mol_id}.json")
         if skip and os.path.exists(path):
             try:
-                if json.load(open(path)).get("error") is None:
+                old = json.load(open(path))
+                from ..routes.aizynth import validate_record
+                # reuse only a complete record that is for this very molecule
+                if old.get("error") is None and validate_record(old) is None and old.get("mol_id") == mol_id and old.get("smiles") == smi:
                     n_skip += 1
                     continue
             except Exception:
@@ -142,6 +145,11 @@ def _worker(args):
 def plan_population(items: List[tuple], config_path: str, out_dir: str, settings: Optional[dict] = None, workers: int = 1,
                     chunk: int = 0, n_chunks: int = 1, skip_existing: bool = True) -> dict:
     """items: [(mol_id, smiles)]. Plans chunk `chunk` of `n_chunks` (for SLURM arrays) with `workers` processes, resumable."""
+    for name, v, lo in (("workers", workers, 1), ("n_chunks", n_chunks, 1)):
+        if isinstance(v, bool) or not isinstance(v, int) or v < lo:
+            raise ValueError(f"{name} must be an integer >= {lo}, got {v!r}")
+    if isinstance(chunk, bool) or not isinstance(chunk, int) or not (0 <= chunk < n_chunks):
+        raise ValueError(f"chunk must satisfy 0 <= chunk < n_chunks, got chunk={chunk!r}, n_chunks={n_chunks!r}")
     os.makedirs(out_dir, exist_ok=True)
     mine = items[chunk::n_chunks]
     parts = [mine[i::workers] for i in range(workers)]

@@ -14,6 +14,7 @@ class Resource:
     name: str
     roles: List[str]
     provides: List[str]
+    optional_provides: List[str]
     default_enabled: bool
     access: str
     automated: bool
@@ -50,7 +51,7 @@ def load_manifest(path: Optional[str] = None) -> Manifest:
         role = r.get("role", [])
         res[r["id"]] = Resource(
             id=r["id"], name=r.get("name", r["id"]), roles=[role] if isinstance(role, str) else list(role),
-            provides=list(r.get("provides", [])), default_enabled=bool(r.get("default_enabled", False)),
+            provides=list(r.get("provides", [])), optional_provides=list(r.get("optional_provides", [])), default_enabled=bool(r.get("default_enabled", False)),
             access=r.get("access", "public_download"), automated=bool(r.get("automated", False)), get=r.get("get", ""),
             url=r.get("url", ""), format=r.get("format"), cite=r.get("cite"), terms=r.get("terms"), warn=r.get("warn"),
             check=r.get("check") or {}, if_missing=r.get("if_missing") or {}, fetch=r.get("fetch") or {}, flags=r.get("flags") or {}, raw=r)

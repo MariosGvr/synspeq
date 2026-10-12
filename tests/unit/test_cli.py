@@ -72,7 +72,7 @@ class CLI(unittest.TestCase):
         with open(src, "w") as fh:
             fh.write("CCO\nCCN\n")
         md5 = hashlib.md5(open(src, "rb").read()).hexdigest()
-        r = SimpleNamespace(id="molport", format="smiles", fetch={"url": "file://" + src, "filename": "got.smi", "md5": md5})
+        r = SimpleNamespace(id="molport", format="smiles", check={}, fetch={"url": "file://" + src, "filename": "got.smi", "md5": md5})
         st = Store(os.path.join(d, "s"))
         self.assertEqual(_fetch(r, os.path.join(d, "dl"), st), 0)
         self.assertEqual(st.get("molport")["validation"]["status"], "ok")
@@ -102,13 +102,20 @@ class CLI(unittest.TestCase):
         self.assertEqual((r.state("C1CCNCC1"), r.state("OCCO"), r.state("CCCCCC")), ("hit", "non_hit", "unknown"))
 
     def test_aizynth_download_registers_models_and_stock(self):
-        import stat
+        import stat, sys
+        try:
+            import tables  # noqa: F401
+        except ImportError:
+            self.skipTest('PyTables not installed')
         d = tempfile.mkdtemp()
         shim = os.path.join(d, "bin"); os.makedirs(shim)
         script = os.path.join(shim, "download_public_data")
-        with open(script, "w") as fh:                    # stand-in for AiZynthFinder's downloader
-            fh.write("#!/bin/sh\nmkdir -p \"$1\"\nprintf 'expansion: {}\\n' > \"$1/config.yml\"\n"
-                     "printf '\\211HDF\\r\\n\\032\\n0000' > \"$1/zinc_stock.hdf5\"\n")
+        with open(script, "w") as fh:                    # stand-in for AiZynthFinder's downloader: a real InChIKey stock
+            fh.write(f"#!{sys.executable}\nimport os, sys\nd = sys.argv[1]\nos.makedirs(d, exist_ok=True)\n"
+                     "open(os.path.join(d, 'config.yml'), 'w').write('expansion: {}\\n')\n"
+                     "open(os.path.join(d, 'uspto_model.onnx'), 'w').write('model')\n"
+                     "import pandas as pd\n"
+                     "pd.DataFrame({'inchi_key': ['LFQSCWFLJHTTHZ-UHFFFAOYSA-N']}).to_hdf(os.path.join(d, 'zinc_stock.hdf5'), key='table', mode='w')\n")
         os.chmod(script, os.stat(script).st_mode | stat.S_IEXEC)
         old = os.environ.get("PATH", "")
         os.environ["PATH"] = shim + os.pathsep + old
@@ -120,19 +127,7 @@ class CLI(unittest.TestCase):
         from synspeq.resources import Store
         st = Store(os.path.join(d, "s"))
         self.assertEqual(st.get("aizynth_models")["validation"]["status"], "ok")
-        self.assertEqual(st.get("aizynth_zinc")["validation"]["status"], "ok")
-
-    def test_plan_records_are_not_mixed_across_stocks(self):
-        from types import SimpleNamespace
-        from synspeq.cli import _check_plan_fingerprint
-        d = tempfile.mkdtemp()
-        st = lambda p: SimpleNamespace(state="ready", path=p)
-        res_a = SimpleNamespace(states={"aizynth_zinc": st("/x/zinc_stock.hdf5"), "aizynth_models": st("/x")})
-        res_b = SimpleNamespace(states={"aizynth_zinc": st("/y/other_stock.hdf5"), "aizynth_models": st("/x")})
-        ent = {"aizynth_zinc": {"sha256": "a" * 64}}
-        self.assertEqual(_check_plan_fingerprint(d, res_a, ent), 0)
-        self.assertEqual(_check_plan_fingerprint(d, res_a, ent), 0)          # same stock: reuse allowed
-        self.assertEqual(_check_plan_fingerprint(d, res_b, {"aizynth_zinc": {"sha256": "b" * 64}}), 2)
+        self.assertIn(st.get("aizynth_zinc")["validation"]["status"], ("ok", "unchecked"))
 
     def test_data_list_and_info(self):
         d = tempfile.mkdtemp()

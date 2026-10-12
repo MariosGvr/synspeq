@@ -26,11 +26,12 @@ def generic_scaffold(smiles_or_mol) -> Optional[str]:
 
 
 def n50_csr(scaffolds: Iterable[Optional[str]]):
-    """-> (n50, n_distinct_scaffolds, csr_auc, n_cyclic). Empty/None scaffolds are excluded."""
+    """-> (n50, n_distinct_scaffolds, csr_auc, n_cyclic). Empty/None scaffolds are excluded. n50 and csr_auc are None
+    when there is no cyclic molecule."""
     c = Counter(s for s in scaffolds if s)
     total = sum(c.values())
     if total == 0:
-        return 0, 0, 0.0, 0
+        return None, 0, None, 0           # no cyclic molecule: N50 and CSR-AUC are undefined, not zero
     freqs = sorted(c.values(), reverse=True)
     cum, n50 = 0, 0
     for i, f in enumerate(freqs, 1):
@@ -51,7 +52,8 @@ def subsample_n50(scaffolds: Sequence[Optional[str]], n: int = 3000, seeds: Sequ
     if len(sc) < n:
         return None
     vals = [n50_csr(random.Random(s).sample(sc, n))[0] for s in seeds]
-    return sum(vals) / len(vals)
+    vals = [v for v in vals if v is not None]
+    return (sum(vals) / len(vals)) if vals else None
 
 
 def scaffold_prior(smiles: Iterable[str]) -> Dict[str, int]:
@@ -59,12 +61,13 @@ def scaffold_prior(smiles: Iterable[str]) -> Dict[str, int]:
     c: Counter = Counter()
     for s in smiles:
         g = generic_scaffold(s)
-        if g is not None:
+        if g:                                  # the same policy as the query side: acyclic ('') and failures are excluded
             c[g] += 1
     return dict(c)
 
 
 def cosine_to_prior(scaffolds: Iterable[Optional[str]], prior: Dict[str, int]) -> float:
+    prior = {k: v for k, v in prior.items() if k}      # a prior file written by an older version may carry the acyclic scaffold
     m = Counter(s for s in scaffolds if s)
     keys = set(m) | set(prior)
     dot = sum(m.get(k, 0) * prior.get(k, 0) for k in keys)

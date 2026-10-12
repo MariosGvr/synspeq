@@ -14,13 +14,42 @@ from .resources.policy import Resolution
 from .routes import load_outcome
 
 
-def load_outcomes(pop: Population, routes_dirs) -> Dict[str, object]:
-    out = {}
+def _safe_component(name: Optional[str]) -> bool:
+    """A record title may be used as a file name only if it cannot leave the records folder."""
+    return bool(name) and len(name) <= 200 and name not in (".", "..") and not any(c in name for c in "/\\\0") and name == name.strip()
+
+
+def _contained(root: str, candidate: str) -> bool:
+    r = os.path.realpath(root)
+    c = os.path.realpath(candidate)
+    return c == r or c.startswith(r + os.sep)
+
+
+def load_outcomes(pop: Population, routes_dirs, use_titles: bool = True) -> Dict[str, object]:
+    """Planner record for every molecule of the population.
+
+    Lookup order: `<mol_id>.json` (records written by `synspeq plan`), then, when `use_titles` is true, `<title>.json` where
+    the title is the source record's name (records from an earlier AiZynthFinder run named after the molecule). A record found
+    by title is accepted only if (a) the title is a plain file name inside the records folder and (b) the molecule named in
+    the record is the molecule being evaluated; a mismatch is an execution_error, not a result for another molecule.
+    """
+    out: Dict[str, object] = {}
     for m in pop.molecules:
+        cands = [(m.mol_id, False)]
         name = m.source_record.name
-        cands = [m.mol_id] + ([name] if name else [])
-        path = next((os.path.join(d, f"{c}.json") for d in routes_dirs for c in cands if os.path.exists(os.path.join(d, f"{c}.json"))), None)
-        out[m.mol_id] = load_outcome(path)
+        if use_titles and _safe_component(name):
+            cands.append((name, True))
+        path = None
+        by_title = False
+        for d in routes_dirs:
+            for c, is_title in cands:
+                f = os.path.join(d, f"{c}.json")
+                if os.path.isfile(f) and _contained(d, f):
+                    path, by_title = f, is_title
+                    break
+            if path:
+                break
+        out[m.mol_id] = load_outcome(path, expected_identity=m.identity)
     return out
 
 
@@ -49,7 +78,7 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
     if _status(res, "P2") == "value":
         st = res.states["uspto_rxninsight_db"]
         reactions = required_reactions(pop, outcomes)
-        feats = _p2_features(reactions, st.path, store_entries.get("uspto_rxninsight_db", {}), out_dir, cache_dir)
+        feats = _p2_features(reactions, st.path, out_dir, cache_dir)
         p2 = compute_p2(pop, outcomes, feats)
         for r in p2.pop("molecules"):
             mol_rows[r["mol_id"]].update({f"p2_{k}": v for k, v in r.items() if k not in ("mol_id", "pocket")})
@@ -58,11 +87,15 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
     p3s = res.metrics["P3"]
     if p3s.status in ("value", "bound") and p3s.sub:
         bb = None
+        bb_stats: dict = {}
         if res.states["enamine_bb"].state in ("ready", "partial"):
-            bb = load_building_blocks(res.states["enamine_bb"].path)
+            bb = load_building_blocks(res.states["enamine_bb"].path, stats=bb_stats)
+            report["catalogue_stats"] = {"enamine_bb": bb_stats}
         real = None
+        if real_lookup_dir and not os.path.isdir(real_lookup_dir):
+            raise ValueError(f"--real-lookup {real_lookup_dir!r} is not a folder (create it with `synspeq real-merge`)")
         if res.states["enamine_real"].state in ("ready", "partial"):
-            real = RealLookup.load(real_lookup_dir) if real_lookup_dir and os.path.isdir(real_lookup_dir) else RealLookup()
+            real = RealLookup.load(real_lookup_dir) if real_lookup_dir else RealLookup()
         cat = Catalogue(bb, real)
         if real is not None:
             q = frontier_queries(outcomes, cat)
@@ -74,6 +107,15 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
         for r in p3.pop("rows"):
             mol_rows[r["mol_id"]].update({f"p3_{k}": v for k, v in r.items() if k not in ("mol_id", "pocket")})
         report["P3"] = p3
+        # the measured lookup state refines what the resource check could know in advance
+        m = res.metrics["P3"]
+        if p3.get("needs_on_demand_status") == "bound":
+            m.sub["real_needed"] = dict(status="bound", reason="some intermediates were never looked up in REAL: lower bound")
+        if p3.get("frontier_status") == "bound" and m.status == "value":
+            m.status = "bound"
+            m.reason = "some intermediates were never looked up in REAL: residual steps are upper bounds"
+        report["status"]["P3"] = dict(status=m.status, reason=m.reason, sub=m.sub)
+        report["banner"] = res.banner
     # ---- P4
     if _status(res, "P4") in ("value", "bound"):
         report["P4"] = compute_p4(pop, outcomes, scaffold_prior, n_sub)
@@ -93,12 +135,34 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
     return report
 
 
-def _p2_features(reactions, db_path: str, entry: dict, out_dir: str, cache_dir: Optional[str] = None) -> dict:
-    from .support.engine import FeatureCache, Preprocessor, Searcher, reaction_features
-    from .support.index import PrecedentIndex
-    ic = os.path.join(cache_dir, "uspto_identity_keys.parquet") if cache_dir else None
-    index = PrecedentIndex.from_parquet(db_path, n_proc=4, identity_cache=ic)
-    prep, searcher = Preprocessor(), Searcher(index)
-    tag = entry.get("sha256") or entry.get("snapshot_date") or os.path.basename(db_path)
-    cache = FeatureCache(os.path.join(out_dir, "p2_reaction_features.jsonl"), tag)
-    return {rxn: cache.get_or_compute(rxn, lambda r: reaction_features(r, prep, searcher)) for rxn in reactions}
+def _p2_features(reactions, db_path: str, out_dir: str, cache_dir: Optional[str] = None) -> dict:
+    """Retrieval features for every reaction. Cached rows are reused only when the database content (sha256), the RDKit,
+    Rxn-INSIGHT and RXNMapper versions and the feature schema are the same; the index and the models are built only if some
+    reaction is not cached."""
+    import hashlib
+    from importlib import metadata
+    import rdkit
+    from .hashing import content_id
+    from .support.engine import FeatureCache
+    cache_dir = cache_dir or out_dir
+    os.makedirs(cache_dir, exist_ok=True)
+    def ver(pkg):
+        try:
+            return metadata.version(pkg)
+        except metadata.PackageNotFoundError:
+            return None
+    cid = content_id(db_path, os.path.join(cache_dir, "file_hashes.json"))
+    meta = dict(db_sha256=cid, rdkit=rdkit.__version__, key_policy="rxn-key-v1", rxn_insight=ver("rxn-insight"), rxnmapper=ver("rxnmapper"),
+                features="features-v1")
+    key = hashlib.sha256(json.dumps(meta, sort_keys=True).encode()).hexdigest()
+    cache = FeatureCache(os.path.join(out_dir, "p2_reaction_features.jsonl"), key)
+    todo = [r for r in reactions if r not in cache.rows]
+    if todo:
+        from .support.engine import Preprocessor, Searcher, reaction_features
+        from .support.index import PrecedentIndex
+        ic = os.path.join(cache_dir, f"uspto_identity_{cid[:16]}.parquet")
+        index = PrecedentIndex.from_parquet(db_path, n_proc=4, identity_cache=ic, cache_meta=dict(db_sha256=cid, rdkit=rdkit.__version__, key_policy="rxn-key-v1"))
+        prep, searcher = Preprocessor(), Searcher(index)
+        for rxn in todo:
+            cache.get_or_compute(rxn, lambda r: reaction_features(r, prep, searcher))
+    return {rxn: cache.rows[rxn] for rxn in reactions}

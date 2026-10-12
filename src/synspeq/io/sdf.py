@@ -27,6 +27,19 @@ def _blocks(fh) -> Iterator[str]:
         yield "".join(buf)          # final record without a terminator
 
 
+def iter_sdf_blocks(path: str) -> Iterator[str]:
+    """Raw text of every SDF record (also a last record without '$$$$'). Shared by the molecule reader, the catalogue
+    reader and resource validation so that all three see the same records."""
+    with _open_text(path) as fh:
+        yield from _blocks(fh)
+
+
+def molblock_of(block: str):
+    """The molfile part of a record (up to and including 'M  END') or None."""
+    mb, _tail, _title = _split(block)
+    return mb
+
+
 def _split(block: str):
     lines = block.splitlines()
     for i, l in enumerate(lines):
@@ -60,31 +73,30 @@ def _sanitize_failure(mol) -> str:
 
 def read_sdf(path: str, source: str | None = None) -> Iterator[InputRecord]:
     src = source or os.path.basename(path)
-    with _open_text(path) as fh:
-        for i, block in enumerate(_blocks(fh)):
-            molblock, tail, title = _split(block)
-            rid = f"{src}#{i}"
-            props = _props(tail)
-            if molblock is None:
-                yield InputRecord(rid, src, i, title or None, props, None, "invalid", "no_molblock_end")
-                continue
-            mol = Chem.MolFromMolBlock(molblock, sanitize=False, removeHs=False)
-            if mol is None:
-                yield InputRecord(rid, src, i, title or None, props, None, "invalid", "molblock_unreadable")
-                continue
-            if mol.GetNumAtoms() == 0:
-                yield InputRecord(rid, src, i, title or None, props, None, "invalid", "no_atoms")
-                continue
-            reason = None
-            try:
-                Chem.SanitizeMol(mol)
-                mol = Chem.RemoveHs(mol)
-                if mol.GetNumConformers() and mol.GetConformer().Is3D():
-                    Chem.AssignStereochemistryFrom3D(mol)
-            except Exception:                       # RDKit raises on sanitisation failure
-                reason = _sanitize_failure(mol)
-            if reason:
-                yield InputRecord(rid, src, i, title or None, props, None, "invalid", reason)
-            else:
-                ident = identity_from_mol(mol)
-                yield InputRecord(rid, src, i, title or None, props, ident, "ok", None, n_fragments(ident))
+    for i, block in enumerate(iter_sdf_blocks(path)):
+        molblock, tail, title = _split(block)
+        rid = f"{src}#{i}"
+        props = _props(tail)
+        if molblock is None:
+            yield InputRecord(rid, src, i, title or None, props, None, "invalid", "no_molblock_end")
+            continue
+        mol = Chem.MolFromMolBlock(molblock, sanitize=False, removeHs=False)
+        if mol is None:
+            yield InputRecord(rid, src, i, title or None, props, None, "invalid", "molblock_unreadable")
+            continue
+        if mol.GetNumAtoms() == 0:
+            yield InputRecord(rid, src, i, title or None, props, None, "invalid", "no_atoms")
+            continue
+        reason = None
+        try:
+            Chem.SanitizeMol(mol)
+            mol = Chem.RemoveHs(mol)
+            if mol.GetNumConformers() and mol.GetConformer().Is3D():
+                Chem.AssignStereochemistryFrom3D(mol)
+        except Exception:                       # RDKit raises on sanitisation failure
+            reason = _sanitize_failure(mol)
+        if reason:
+            yield InputRecord(rid, src, i, title or None, props, None, "invalid", reason)
+        else:
+            ident = identity_from_mol(mol)
+            yield InputRecord(rid, src, i, title or None, props, ident, "ok", None, n_fragments(ident))

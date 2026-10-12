@@ -133,23 +133,50 @@ def reaction_features(rxn: str, prep: Preprocessor, searcher: Searcher) -> dict:
 
 
 class FeatureCache:
-    """reaction string -> feature row, kept as JSON lines so interrupted runs resume. Keyed to one database."""
+    """reaction string -> feature row, kept as JSON lines so interrupted runs resume. Rows carry the cache key (`_db`) of the
+    database and software that produced them; rows with another key are ignored, never reused.
+
+    A final line without a newline is an interrupted append: it is dropped (with a note) and the file is truncated back to
+    the last complete row. A corrupt line anywhere else is an error, because silently skipping it could hide data loss."""
 
     def __init__(self, path: str, db_tag: str):
-        self.path, self.db_tag, self.rows = path, db_tag, {}
         import os
-        if os.path.exists(path):
-            with open(path) as fh:
-                for line in fh:
-                    d = json.loads(line)
-                    if d.get("_db") == db_tag:
-                        self.rows[d["rxn"]] = d
+        self.path, self.db_tag, self.rows, self.recovered_truncated_tail = path, db_tag, {}, False
+        if not os.path.exists(path):
+            return
+        with open(path, "rb") as fh:
+            data = fh.read()
+        good_end = 0
+        pos = 0
+        lines = data.split(b"\n")
+        for i, raw in enumerate(lines):
+            end = pos + len(raw) + (1 if i < len(lines) - 1 else 0)
+            is_last = i == len(lines) - 1                      # the piece after the final newline (usually empty)
+            if raw.strip():
+                try:
+                    d = json.loads(raw.decode("utf-8"))
+                except (ValueError, UnicodeDecodeError):
+                    if is_last:                                # no terminating newline: an interrupted append
+                        self.recovered_truncated_tail = True
+                        break
+                    raise ValueError(f"{path}: corrupt feature record on line {i + 1}; delete the file to recompute these features")
+                if d.get("_db") == db_tag:
+                    self.rows[d["rxn"]] = d
+            good_end = end
+            pos = end
+        if self.recovered_truncated_tail:
+            with open(path, "r+b") as fh:
+                fh.truncate(good_end)
 
     def get_or_compute(self, rxn: str, fn):
         if rxn not in self.rows:
             row = fn(rxn)
             row["_db"] = self.db_tag
             self.rows[rxn] = row
-            with open(self.path, "a") as fh:
-                fh.write(json.dumps(row, default=lambda o: None if o != o else str(o)) + "\n")
+            line = json.dumps(row, default=lambda o: None if o != o else str(o)) + "\n"
+            from ..locking import file_lock
+            with file_lock(self.path + ".lock"):               # evaluators sharing an output folder append one row at a time
+                with open(self.path, "ab") as fh:
+                    fh.write(line.encode("utf-8"))
+                    fh.flush()
         return self.rows[rxn]

@@ -25,22 +25,27 @@ def _open(path: str):
     return gzip.open(path, "rt", errors="replace") if path.endswith(".gz") else open(path, "rt", errors="replace")
 
 
+CATALOGUE_EXT = (".smi", ".txt", ".tsv", ".csv", ".sdf", ".parquet")
+
+
+def is_catalogue_file(name: str) -> bool:
+    n = name.lower()
+    if n.endswith(".gz"):
+        n = n[:-3]
+    return n.endswith(CATALOGUE_EXT)
+
+
 def _iter_smiles(path: str, smiles_col: str = "smiles") -> Iterator[str]:
     low = path.lower()
     if low.endswith((".sdf", ".sdf.gz")):
-        with _open(path) as fh:
-            buf = []
-            for line in fh:
-                if line.startswith("$$$$"):
-                    blk = "".join(buf)
-                    buf = []
-                    cut = blk.find("M  END")
-                    if cut >= 0:
-                        m = Chem.MolFromMolBlock(blk[: cut + 6] + "\n", sanitize=True)
-                        if m is not None:
-                            yield Chem.MolToSmiles(Chem.RemoveHs(m))
-                else:
-                    buf.append(line)
+        from ..io.sdf import iter_sdf_blocks, molblock_of
+        for blk in iter_sdf_blocks(path):             # same record splitting as the molecule reader (incl. a last record without $$$$)
+            mb = molblock_of(blk)
+            if mb is None:
+                continue
+            m = Chem.MolFromMolBlock(mb, sanitize=True)
+            if m is not None:
+                yield Chem.MolToSmiles(Chem.RemoveHs(m))
     elif low.endswith(".parquet"):
         try:
             import pyarrow.parquet as pq
@@ -51,9 +56,13 @@ def _iter_smiles(path: str, smiles_col: str = "smiles") -> Iterator[str]:
     elif low.endswith((".csv", ".csv.gz")):
         import csv
         with _open(path) as fh:
-            for row in csv.DictReader(fh):
-                if row.get(smiles_col):
-                    yield row[smiles_col]
+            rd = csv.DictReader(fh)
+            col = smiles_col if smiles_col in (rd.fieldnames or []) else next((c for c in (rd.fieldnames or []) if c.lower() == "smiles"), None)
+            if col is None:
+                raise ValueError(f"{os.path.basename(path)}: no '{smiles_col}' column (columns: {rd.fieldnames})")
+            for row in rd:
+                if row.get(col):
+                    yield row[col]
     else:                                              # .smi / .txt / .tsv: first whitespace-separated token
         with _open(path) as fh:
             for line in fh:
@@ -63,18 +72,31 @@ def _iter_smiles(path: str, smiles_col: str = "smiles") -> Iterator[str]:
 
 def catalogue_files(path: str):
     if os.path.isdir(path):
-        return sorted(os.path.join(path, f) for f in os.listdir(path) if not f.startswith(".") and os.path.isfile(os.path.join(path, f)))
+        return sorted(os.path.join(path, f) for f in os.listdir(path)
+                      if not f.startswith(".") and os.path.isfile(os.path.join(path, f)) and is_catalogue_file(f))
     return [path]
 
 
-def load_building_blocks(path: str, smiles_col: str = "smiles", already_canonical: bool = False) -> Set[str]:
-    """Stocked catalogue -> set of canonical isomeric SMILES (records RDKit cannot parse are skipped and counted by the caller via len)."""
+def load_building_blocks(path: str, smiles_col: str = "smiles", already_canonical: bool = False, stats: Optional[dict] = None) -> Set[str]:
+    """Stocked catalogue -> set of canonical isomeric SMILES. Pass a dict as `stats` to receive n_records, n_unparseable,
+    n_files. A directory with no recognised catalogue file raises ValueError (it is not an empty catalogue)."""
     out: Set[str] = set()
-    for f in catalogue_files(path):
+    files = [f for f in catalogue_files(path) if is_catalogue_file(os.path.basename(f))]
+    if not files:
+        raise ValueError(f"{path}: no catalogue files (*.smi, *.txt, *.csv, *.sdf, *.parquet, optionally .gz)")
+    n = bad = 0
+    for f in files:
         for s in _iter_smiles(f, smiles_col):
+            n += 1
             c = s if already_canonical else canonical(s)
             if c:
                 out.add(c)
+            else:
+                bad += 1
+    if stats is not None:
+        stats.update(n_records=n, n_unparseable=bad, n_files=len(files), n_unique=len(out))
+    if not out:
+        raise ValueError(f"{path}: no parseable molecules in {len(files)} file(s)")
     return out
 
 

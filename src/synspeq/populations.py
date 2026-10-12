@@ -6,6 +6,7 @@ globally. The source record of a molecule is its first occurrence in input order
 """
 from __future__ import annotations
 import hashlib
+import json
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional
 from .records import InputRecord
@@ -38,6 +39,11 @@ class Population:
     def build(self) -> "Population":
         units: Dict[tuple, Molecule] = {}
         self.molecules, self.record_to_mol = [], {}
+        if self.pocket_field is not None and self.records:
+            ok = [r for r in self.records if r.status == "ok"]
+            if ok and not any(self.pocket_field in r.props for r in self.records):
+                avail = sorted({k for r in self.records[:50] for k in r.props})
+                raise ValueError(f"pocket field {self.pocket_field!r} is not present in any record (properties seen: {avail[:12]})")
         for r in self.records:
             if r.status != "ok":
                 continue
@@ -45,13 +51,17 @@ class Population:
             k = (p, r.identity)
             m = units.get(k)
             if m is None:
-                mid = "m_" + hashlib.sha1(f"{p}|{r.identity}".encode()).hexdigest()[:14]
+                # typed structured key: a missing pocket (null) and the text "None" must not collide
+                mid = "m_" + hashlib.sha1(json.dumps([p, r.identity], ensure_ascii=True).encode()).hexdigest()[:16]
                 m = Molecule(mid, r.identity, p, r, 1)
                 units[k] = m
                 self.molecules.append(m)
             else:
                 m.n_records += 1
             self.record_to_mol[r.record_id] = m.mol_id
+        ids = [m.mol_id for m in self.molecules]
+        if len(set(ids)) != len(ids):               # never expected; a collision would silently merge two evaluation units
+            raise RuntimeError("molecule id collision in the population")
         return self
 
     def accounting(self) -> dict:
@@ -70,6 +80,8 @@ class Population:
             duplicate_rate=(valid - distinct) / valid if valid else None,   # share of valid raw rows repeating an earlier unit
             n_multi_fragment=sum(1 for m in self.molecules if "." in m.identity),
             n_pockets=len({m.pocket for m in self.molecules if m.pocket is not None}) or None,
+            n_valid_records_without_pocket=(sum(1 for r in self.records if r.status == "ok" and self.pocket_of(r) is None)
+                                            if self.pocket_field is not None else None),
         )
 
 
@@ -83,10 +95,12 @@ def make_population(records: Iterable[InputRecord], label: str, pocket_field: Op
         if first is not None and last is not None:
             raise ValueError("choose either first or last")
         n = first if first is not None else last
+        if isinstance(n, bool) or not isinstance(n, int) or n < 1:
+            raise ValueError(f"window size must be a positive integer, got {n!r}")
+        probe = Population("", recs, pocket_field)
         by: Dict[Optional[str], List[InputRecord]] = {}
         for r in recs:
-            p = None if pocket_field is None else (str(r.props.get(pocket_field)) if r.props.get(pocket_field) not in (None, "") else None)
-            by.setdefault(p, []).append(r)
+            by.setdefault(probe.pocket_of(r), []).append(r)
         keep = set()
         for rs in by.values():
             sel = rs[:n] if first is not None else rs[-n:]

@@ -44,6 +44,7 @@ class Resolution:
     metrics: Dict[str, MetricStatus]
     messages: List[dict]
     exit_code: int
+    planner_stocks: List[str] = field(default_factory=list)   # ids of the resources that make up the planner stock in this run
 
     @property
     def banner(self) -> List[str]:
@@ -63,15 +64,21 @@ def _fix(manifest: Manifest, rid: str) -> str:
     return f"{how}   ({r.get})"
 
 
-def _locate(rid: str, cfg: dict, store: Store, fmt: Optional[str]):
-    """-> (path | None, coverage | None, validation | None, source)"""
+def _locate(rid: str, cfg: dict, store: Store, fmt: Optional[str], check: Optional[dict] = None):
+    """-> (path | None, coverage | None, validation | None, source). A registered file that changed since import is
+    not trusted (its recorded validation and hash no longer describe it)."""
     p = (cfg.get("paths") or {}).get(rid)
     if p:
         p = os.path.abspath(os.path.expanduser(p))
-        return p, None, validate(p, fmt), "config"
+        return p, None, validate(p, fmt, check), "config"
     e = store.get(rid)
     if e:
-        v = validate(e["path"], fmt) if not os.path.exists(e["path"]) else e.get("validation") or validate(e["path"], fmt)
+        why = Store.changed_since_import(e)
+        if why == "path_not_found":
+            return e["path"], e.get("coverage"), {"status": "invalid", "reason": "path_not_found"}, "registry"
+        if why:
+            return e["path"], e.get("coverage"), {"status": "invalid", "reason": f"{why}; re-run `synspeq data import {rid} <path>`"}, "registry"
+        v = e.get("validation") or validate(e["path"], fmt, e.get("check") or check)
         return e["path"], e.get("coverage"), v, "registry"
     return None, None, None, None
 
@@ -85,13 +92,25 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
     if unknown:
         raise ValueError(f"unknown resource ids in config: {sorted(set(unknown))} (see `synspeq data list`)")
 
+    as_stock = set(cfg.get("planner_stock") or [])
+    bad_stock = [r for r in as_stock if r not in R or (STOCK_CAP not in R[r].provides and STOCK_CAP not in R[r].optional_provides)]
+    if bad_stock:
+        raise ValueError(f"planner_stock lists resources that cannot be a planner stock: {sorted(bad_stock)}")
+
+    def prov(rid: str) -> List[str]:
+        """Capabilities a resource provides in THIS run. Dual-role catalogues (Enamine building blocks) are a purchasing
+        catalogue unless the user lists them under planner_stock."""
+        return list(R[rid].provides) + (list(R[rid].optional_provides) if rid in as_stock else [])
+
     requested: Dict[str, str] = {}
     for r in cfg.get("resources", []):
         requested[r] = "user"
+    for r in as_stock:
+        requested.setdefault(r, "user")
     for r in (cfg.get("paths") or {}):
         requested.setdefault(r, "user")
     # R1/R3: a planner stock is added by default only when the user named none.
-    if mode == "plan" and "P1" in pillars and not any(STOCK_CAP in R[r].provides for r in requested):
+    if mode == "plan" and "P1" in pillars and not any(STOCK_CAP in prov(r) for r in requested):
         requested.setdefault("aizynth_zinc", "default")
     if mode == "plan" and "P1" in pillars:
         requested.setdefault("aizynth_models", "core")
@@ -103,7 +122,7 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
         if rid not in requested:
             states[rid] = ResourceState(rid, "not_requested")
             continue
-        path, cov, v, src = _locate(rid, cfg, store, res.format)
+        path, cov, v, src = _locate(rid, cfg, store, res.format, res.check)
         fix = _fix(manifest, rid)
         if path is None:
             states[rid] = ResourceState(rid, "missing", requested[rid], None, "not configured or imported", fix=fix)
@@ -119,13 +138,13 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
     partial_caps = set()
     for s in states.values():
         if s.state == "ready":
-            have.update(R[s.id].provides)
+            have.update(prov(s.id))
         elif s.state == "partial":
-            have.update(R[s.id].provides)
-            partial_caps.update(R[s.id].provides)
+            have.update(prov(s.id))
+            partial_caps.update(prov(s.id))
 
     def broken(cap: str) -> List[ResourceState]:
-        return [s for s in states.values() if s.state in ("missing", "invalid") and cap in R[s.id].provides]
+        return [s for s in states.values() if s.state in ("missing", "invalid") and cap in prov(s.id)]
 
     msgs: List[dict] = []
     metrics: Dict[str, MetricStatus] = {}
@@ -148,6 +167,11 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
             miss.append("planner stock")
             for s in broken(STOCK_CAP):
                 note("error", "P1", f"{s.id}: {s.reason} (requested by {s.requested_by}; the tool will not fall back to another stock)", s.fix)
+        # a planner stock that is only partly available changes which molecules count as purchasable: never plan with it
+        for s in states.values():
+            if s.state == "partial" and STOCK_CAP in prov(s.id):
+                miss.append(f"complete planner stock ({s.id} is only partly available)")
+                note("error", "P1", f"{s.id}: {s.reason}; planning with a partial stock would change every P1 number", s.fix)
         metrics["P1"] = MetricStatus("P1", "blocked", "missing: " + ", ".join(miss)) if miss else MetricStatus("P1", "value")
 
     # ---- P2
@@ -165,7 +189,7 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
         metrics["P3"] = MetricStatus("P3", "not_assessed", "pillar not selected")
     else:
         bs, od = STOCKED in have, ONDEMAND in have
-        asked = [s for s in states.values() if s.requested_by and {STOCKED, ONDEMAND} & set(R[s.id].provides) and s.state in ("missing", "invalid")]
+        asked = [s for s in states.values() if s.requested_by and {STOCKED, ONDEMAND} & set(prov(s.id)) and s.state in ("missing", "invalid")]
         asked_purchasing = [s for s in asked if s.requested_by in ("user", "profile")]
         sub = {}
         if bs or od:
@@ -198,7 +222,7 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
         if SCAFFOLD_REF in have:
             sub["enamine_affinity"] = dict(status="bound" if SCAFFOLD_REF in partial_caps else "value", reason="partial reference catalogue" if SCAFFOLD_REF in partial_caps else "")
         else:
-            asked = [s for s in states.values() if s.requested_by in ("user", "profile") and s.state in ("missing", "invalid") and SCAFFOLD_REF in R[s.id].provides]
+            asked = [s for s in states.values() if s.requested_by in ("user", "profile") and s.state in ("missing", "invalid") and SCAFFOLD_REF in prov(s.id)]
             for s in asked:
                 note("warning", "P4", f"{s.id}: {s.reason}", s.fix)
             sub["enamine_affinity"] = dict(status="unavailable" if (asked and skip) else ("blocked" if asked else "not_assessed"),
@@ -214,13 +238,13 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
     unmet = [s for s in states.values() if s.state in ("missing", "invalid") and s.requested_by in ("user", "profile")]
     hard = False
     for s in unmet:
-        if skip:
+        core = mode == "plan" and "P1" in pillars and ({STOCK_CAP, MODELS_CAP} & set(prov(s.id)))
+        if skip and not core:
             note("warning", s.id, f"{s.reason}; continuing without it (on_missing: skip). Results exclude it and are not comparable with a run that has it.", s.fix)
-            if STOCK_CAP in R[s.id].provides and metrics["P1"].status == "value":
-                metrics["P1"].reason = (metrics["P1"].reason + "; " if metrics["P1"].reason else "") + f"declared stock incomplete: {s.id} missing"
         else:
-            hard = True
+            hard = True            # a missing planner stock or model set is never skipped: every P1 number would change
             if not any(m["scope"] == s.id for m in msgs):
-                note("error", s.id, f"{s.reason}; the run stops before any computation (on_missing: stop)", s.fix)
+                note("error", s.id, f"{s.reason}; the run stops before any computation" + (" (on_missing: skip does not apply to the planner stock or models)" if skip else " (on_missing: stop)"), s.fix)
     code = 2 if hard or any(m.status == "blocked" or any(d["status"] == "blocked" for d in m.sub.values()) for m in metrics.values()) else 0
-    return Resolution(states, metrics, msgs, code)
+    stocks = [rid for rid, st in states.items() if st.state == "ready" and STOCK_CAP in prov(rid)]
+    return Resolution(states, metrics, msgs, code, stocks)

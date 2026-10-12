@@ -107,8 +107,9 @@ class UseCases(PolicyBase):
         self.assertEqual(r.exit_code, 2)
         self.assertTrue(any(m["scope"] == "molport" for m in r.messages))
         r = self.run_(resources=["enamine_bb", "askcos_buyables", "zinc20_tranches", "emolecules_bb", "molport"], on_missing="skip")
-        self.assertEqual(r.exit_code, 0)
-        self.assertIn("declared stock incomplete", r.metrics["P1"].reason)
+        self.assertEqual(r.exit_code, 2)                       # a missing planner stock is never skipped when planning
+        r = self.run_(mode="replay", resources=["enamine_bb", "askcos_buyables", "zinc20_tranches", "emolecules_bb", "molport"], on_missing="skip")
+        self.assertEqual(r.exit_code, 0)                       # planner records are supplied: the stock is not used
 
     def test_unknown_resource_id_is_an_error(self):
         with self.assertRaises(ValueError):
@@ -131,7 +132,7 @@ class Union(PolicyBase):
         self.assertEqual(out["members"]["b"]["overlap_with_previous"], 1)
         self.assertTrue(out["noncommercial"])
         self.assertFalse(out["redistributable"])                 # b is not redistributable
-        e = self.store.register("user_union_stock", out["file"], fmt="aizynthfinder_hdf5")
+        e = self.store.register("user_union_stock", out["file"])
         self.assertEqual(e["validation"]["status"], "ok")
 
 

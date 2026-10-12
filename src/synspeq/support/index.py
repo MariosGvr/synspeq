@@ -51,6 +51,19 @@ def decode_fp_column(strings) -> (np.ndarray, np.ndarray):
     return M, ok
 
 
+def _cache_valid(cache_path: str, meta: Optional[dict], n_rows: int) -> bool:
+    import json
+    mp = cache_path + ".meta.json"
+    if not (os.path.exists(cache_path) and os.path.exists(mp) and meta):
+        return False                       # a cache without verifiable provenance is never reused
+    try:
+        with open(mp) as fh:
+            got = json.load(fh)
+    except (OSError, ValueError):
+        return False
+    return got == dict(meta, n_rows=n_rows)
+
+
 def _keys_chunk(rxns):
     return [key_hash(rxn_key(r, True)) for r in rxns]
 
@@ -75,7 +88,9 @@ class PrecedentIndex:
 
     @classmethod
     def from_parquet(cls, path: str, identity_index: Optional[str] = None, n_proc: int = 1, limit: Optional[int] = None,
-                     identity_cache: Optional[str] = None):
+                     identity_cache: Optional[str] = None, cache_meta: Optional[dict] = None):
+        """identity_cache + cache_meta: identity keys are reused only if the sidecar `<cache>.meta.json` equals cache_meta
+        (content hash of the database, RDKit version, key policy) and the row count matches; otherwise they are rebuilt."""
         import pandas as pd
         df = pd.read_parquet(path, columns=["REACTION", "REF", "TAG", "TAG2", "rxn_str_patt_fp"])
         if limit:
@@ -83,10 +98,8 @@ class PrecedentIndex:
         fp, ok = decode_fp_column(df["rxn_str_patt_fp"].values)
         if identity_index:
             ks = pd.read_parquet(identity_index, columns=["key_stereo"]).key_stereo.values[: len(df)]
-        elif identity_cache and os.path.exists(identity_cache) and not limit:
+        elif identity_cache and not limit and _cache_valid(identity_cache, cache_meta, len(df)):
             ks = np.array(pd.read_parquet(identity_cache, columns=["key_stereo"]).key_stereo.values, dtype=object)
-            if len(ks) != len(df):
-                raise ValueError(f"identity cache {identity_cache} has {len(ks)} keys for {len(df)} records; delete it to rebuild")
         else:
             rx = df["REACTION"].tolist()
             if n_proc > 1:
@@ -97,9 +110,13 @@ class PrecedentIndex:
             else:
                 ks = np.array(_keys_chunk(rx), dtype=object)
             if identity_cache and not limit:
+                import json
                 os.makedirs(os.path.dirname(os.path.abspath(identity_cache)), exist_ok=True)
-                pd.DataFrame({"key_stereo": ks}).to_parquet(identity_cache + ".tmp")
-                os.replace(identity_cache + ".tmp", identity_cache)
+                tmp = f"{identity_cache}.{os.getpid()}.tmp"
+                pd.DataFrame({"key_stereo": ks}).to_parquet(tmp)
+                os.replace(tmp, identity_cache)
+                with open(identity_cache + ".meta.json", "w") as fh:
+                    json.dump(dict(cache_meta or {}, n_rows=len(df)), fh)
         return cls(df["REACTION"].values, df["REF"].values, df["TAG"].values, df["TAG2"].values, fp, ok, ks, source=os.path.abspath(path))
 
     def group(self, tag2: str):

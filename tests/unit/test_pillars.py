@@ -38,7 +38,7 @@ class Frontier(unittest.TestCase):
         f = walk_frontier(tree(), Catalogue(set(), real))
         self.assertEqual((f.residual_steps, f.tier), (1, "on_demand"))
         # CCCCO was never queried: unknown, not a non-hit
-        self.assertGreaterEqual(f.n_unknown, 0)
+        self.assertEqual(f.n_unknown, 1)            # CCCCO was never queried; CCCO is a recorded hit; the leaves are planner stock
         real2 = RealLookup()
         f2 = walk_frontier(tree(), Catalogue(set(), real2))
         self.assertEqual(f2.tier, "none")
@@ -77,7 +77,11 @@ class Coverage(unittest.TestCase):
 
     def test_subsample_requires_n(self):
         self.assertIsNone(subsample_n50(["A"] * 10, n=20))
-        self.assertEqual(subsample_n50(["A"] * 30 + ["B"] * 30, n=20), 1.0 if False else subsample_n50(["A"] * 30 + ["B"] * 30, n=20))
+        # 59 A and 1 B: every 20-molecule sample holds at least 19 A, so A alone covers half and N50 is 1 for every seed
+        self.assertEqual(subsample_n50(["A"] * 59 + ["B"], n=20), 1.0)
+        # 30 A and 30 B is a different regime: N50 is 1 or 2 depending on the draw, so the mean lies between them
+        m = subsample_n50(["A"] * 30 + ["B"] * 30, n=20)
+        self.assertTrue(1.0 <= m <= 2.0)
 
     def test_cosine(self):
         self.assertAlmostEqual(cosine_to_prior(["A", "A", "B"], {"A": 2, "B": 1}), 1.0)

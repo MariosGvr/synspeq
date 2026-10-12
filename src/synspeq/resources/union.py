@@ -21,10 +21,15 @@ def _keys_from_hdf5(path: str) -> Iterator[str]:
 
 
 def member_keys(path: str, smiles_col: str = "smiles") -> Tuple[Set[str], dict]:
-    from ..purchasing.catalogue import _iter_smiles, catalogue_files
+    from ..purchasing.catalogue import _iter_smiles, catalogue_files, is_catalogue_file
     keys: Set[str] = set()
     n_in = n_bad = 0
-    for f in catalogue_files(path):
+    if os.path.isdir(path):
+        files = sorted(os.path.join(path, f) for f in os.listdir(path)
+                       if os.path.isfile(os.path.join(path, f)) and not f.startswith(".") and (is_catalogue_file(f) or f.lower().endswith((".h5", ".hdf5"))))
+    else:
+        files = [path]
+    for f in files:
         if f.lower().endswith((".h5", ".hdf5")):
             for k in _keys_from_hdf5(f):
                 n_in += 1
@@ -55,12 +60,16 @@ def build_union(members: Dict[str, str], out_dir: str, flags: Optional[Dict[str,
         import tables  # noqa: F401
         import pandas as pd
         out = os.path.join(out_dir, f"{name}.hdf5")
-        pd.DataFrame({"inchi_key": sorted(allk)}).to_hdf(out, key="table", mode="w")
+        tmp = f"{out}.{os.getpid()}.tmp"
+        pd.DataFrame({"inchi_key": sorted(allk)}).to_hdf(tmp, key="table", mode="w")
+        os.replace(tmp, out)
         fmt = "hdf5"
     except ImportError:
         out = os.path.join(out_dir, f"{name}.txt")
-        with open(out, "w") as fh:
+        tmp = f"{out}.{os.getpid()}.tmp"
+        with open(tmp, "w") as fh:
             fh.write("\n".join(sorted(allk)) + "\n")
+        os.replace(tmp, out)
         fmt = "text"
     h = hashlib.sha256()
     with open(out, "rb") as fh:
