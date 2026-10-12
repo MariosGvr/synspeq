@@ -101,6 +101,39 @@ class CLI(unittest.TestCase):
         r = RealLookup.load(lk)
         self.assertEqual((r.state("C1CCNCC1"), r.state("OCCO"), r.state("CCCCCC")), ("hit", "non_hit", "unknown"))
 
+    def test_aizynth_download_registers_models_and_stock(self):
+        import stat
+        d = tempfile.mkdtemp()
+        shim = os.path.join(d, "bin"); os.makedirs(shim)
+        script = os.path.join(shim, "download_public_data")
+        with open(script, "w") as fh:                    # stand-in for AiZynthFinder's downloader
+            fh.write("#!/bin/sh\nmkdir -p \"$1\"\nprintf 'expansion: {}\\n' > \"$1/config.yml\"\n"
+                     "printf '\\211HDF\\r\\n\\032\\n0000' > \"$1/zinc_stock.hdf5\"\n")
+        os.chmod(script, os.stat(script).st_mode | stat.S_IEXEC)
+        old = os.environ.get("PATH", "")
+        os.environ["PATH"] = shim + os.pathsep + old
+        try:
+            rc, out = self.run_cli("--data-dir", os.path.join(d, "s"), "data", "download", "aizynth_zinc", "--dest", os.path.join(d, "dl"), "--accept-terms")
+        finally:
+            os.environ["PATH"] = old
+        self.assertEqual(rc, 0, out)
+        from synspeq.resources import Store
+        st = Store(os.path.join(d, "s"))
+        self.assertEqual(st.get("aizynth_models")["validation"]["status"], "ok")
+        self.assertEqual(st.get("aizynth_zinc")["validation"]["status"], "ok")
+
+    def test_plan_records_are_not_mixed_across_stocks(self):
+        from types import SimpleNamespace
+        from synspeq.cli import _check_plan_fingerprint
+        d = tempfile.mkdtemp()
+        st = lambda p: SimpleNamespace(state="ready", path=p)
+        res_a = SimpleNamespace(states={"aizynth_zinc": st("/x/zinc_stock.hdf5"), "aizynth_models": st("/x")})
+        res_b = SimpleNamespace(states={"aizynth_zinc": st("/y/other_stock.hdf5"), "aizynth_models": st("/x")})
+        ent = {"aizynth_zinc": {"sha256": "a" * 64}}
+        self.assertEqual(_check_plan_fingerprint(d, res_a, ent), 0)
+        self.assertEqual(_check_plan_fingerprint(d, res_a, ent), 0)          # same stock: reuse allowed
+        self.assertEqual(_check_plan_fingerprint(d, res_b, {"aizynth_zinc": {"sha256": "b" * 64}}), 2)
+
     def test_data_list_and_info(self):
         d = tempfile.mkdtemp()
         rc, out = self.run_cli("--data-dir", d, "data", "list")

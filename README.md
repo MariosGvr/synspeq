@@ -34,16 +34,39 @@ metric. Results are comparable only when the stock and planner settings are the 
 
 ## Quick start
 
+**1. Install**
 ```bash
 git clone https://github.com/MariosGvr/synspeq && cd synspeq
-conda env create -f environment.yml        # everything, including AiZynthFinder and Rxn-INSIGHT
+conda env create -f environment.yml        # includes AiZynthFinder and Rxn-INSIGHT
 conda activate synspeq
-
-synspeq data check                         # what is installed, and what each pillar still needs
-synspeq data download uspto_rxninsight_db --dest data/ --accept-terms
-synspeq run molecules.sdf --out results/   # plan, then evaluate
-open results/evaluation/report.html
 ```
+
+**2. Get the data** (terms and citations are shown before each download; about 2 GB in total)
+```bash
+synspeq data download aizynth_zinc --dest data/aizynth --accept-terms      # planner models and the default stock
+synspeq data download uspto_rxninsight_db --dest data/uspto --accept-terms # reaction database for Pillar 2
+synspeq data check                         # what is installed and what each pillar still needs
+```
+
+**3. Run**
+```bash
+synspeq run molecules.sdf --pocket-field pocket_id --out results/    # plan with AiZynthFinder, then evaluate
+```
+`--pocket-field` is optional: it names an SDF property that groups molecules by target. Without it, duplicates are
+removed across the whole file. Open `results/evaluation/report.html` for the report.
+
+Planning runs a time-limited search per distinct molecule (60 s each by default), so large sets should be split over
+several processes (`--workers`) or SLURM array tasks (`synspeq plan --chunk i --n-chunks N`), then evaluated with
+`synspeq evaluate` on the resulting records.
+
+**4. Add purchasing information (Pillar 3, optional)**
+Pillar 3 needs a catalogue beyond the planner stock, for example Enamine building blocks:
+```bash
+synspeq data import enamine_bb data/Enamine_Building_Blocks_Stock.sdf
+synspeq run molecules.sdf --pocket-field pocket_id --resources enamine_bb --out results/
+```
+Planner records in `results/routes` are reused when a run is repeated with the same stock, models and settings, so only
+the added pillar is computed. If the stock changes, SYNSPEQ refuses to reuse the folder; give it a new `--out`.
 
 To evaluate saved JSON from a previous AiZynthFinder run without rerunning planning:
 

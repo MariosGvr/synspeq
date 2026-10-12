@@ -159,7 +159,17 @@ def cmd_data(a) -> int:
             os.makedirs(a.dest, exist_ok=True)
             rc = subprocess.call([exe, a.dest])
             if rc == 0:
-                print(f"Downloaded to {a.dest}. Register the files with `synspeq data import {a.id} <file>` (stock: zinc_stock.hdf5; models: the .onnx/.hdf5 files listed in config.yml).")
+                # download_public_data fetches models, templates and the stock together: register both resources
+                dest = os.path.abspath(a.dest)
+                stock = os.path.join(dest, "zinc_stock.hdf5")
+                if os.path.exists(os.path.join(dest, "config.yml")):
+                    e = store.register("aizynth_models", dest, fmt=man.resources["aizynth_models"].format, terms_acknowledged=True)
+                    print(f"registered aizynth_models -> {dest}  validation: {e['validation'].get('status')}")
+                if os.path.exists(stock):
+                    e = store.register("aizynth_zinc", stock, fmt=man.resources["aizynth_zinc"].format, terms_acknowledged=True)
+                    print(f"registered aizynth_zinc -> {stock}  validation: {e['validation'].get('status')}")
+                else:
+                    print(f"{stock} not found; register the stock with `synspeq data import aizynth_zinc <file>`", file=sys.stderr)
             return rc
         if r.fetch:
             if not a.accept_terms or not a.dest:
@@ -260,6 +270,28 @@ def _planner_config(res, man, store, out_dir: str) -> Optional[str]:
     return build_config(mc, stocks, os.path.join(out_dir, "aizynth_config.yml")) if stocks else None
 
 
+def _check_plan_fingerprint(out_dir: str, res, entries: dict) -> int:
+    """Planner records are reused when a run is repeated; refuse to mix records made with another stock, model set or settings."""
+    import hashlib
+    from .planners import PLANNER_SETTINGS
+    parts = {rid: (st.path and os.path.basename(st.path.rstrip(os.sep)), (entries.get(rid) or {}).get("sha256") or (entries.get(rid) or {}).get("listing_sha256")
+                   or (entries.get(rid) or {}).get("size_bytes"))
+             for rid, st in res.states.items() if st.state == "ready" and rid in ("aizynth_models", "aizynth_zinc", "user_union_stock", "zinc20_tranches",
+                                                                                 "askcos_buyables", "enamine_bb", "emolecules_bb", "molport")}
+    fp = hashlib.sha256(json.dumps(dict(settings=PLANNER_SETTINGS, resources=parts), sort_keys=True, default=str).encode()).hexdigest()
+    path = os.path.join(out_dir, "plan_fingerprint.json")
+    if os.path.exists(path):
+        old = json.load(open(path)).get("fingerprint")
+        if old != fp:
+            print(f"{out_dir} holds planner records made with a different stock, models or settings; use a new --out folder "
+                  "(mixing them would make the results incomparable).", file=sys.stderr)
+            return 2
+    else:
+        with open(path, "w") as fh:
+            json.dump(dict(fingerprint=fp, settings=PLANNER_SETTINGS, resources=parts), fh, indent=1, default=str)
+    return 0
+
+
 def cmd_plan(a) -> int:
     """Plan every distinct molecule with AiZynthFinder (resumable; one chunk per SLURM array task)."""
     from .planners import plan_population
@@ -278,6 +310,9 @@ def cmd_plan(a) -> int:
     pf = a.pocket_field or cfg.get("pocket_field")
     pop = make_population(_read_any(a.input, smiles_col=a.smiles_col, name_col=a.name_col), os.path.basename(a.input), pf, first=a.first, last=a.last)
     items = [(m.mol_id, m.identity) for m in pop.molecules]
+    rc = _check_plan_fingerprint(a.out, res, store.all())
+    if rc:
+        return rc
     info = plan_population(items, conf, a.out, workers=a.workers, chunk=a.chunk, n_chunks=a.n_chunks)
     with open(os.path.join(a.out, f"plan_manifest_chunk{a.chunk}.json"), "w") as fh:
         json.dump(dict(synspeq_version=__version__, config=conf, population=pop.accounting(), **info), fh, indent=1)
