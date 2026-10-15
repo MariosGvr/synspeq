@@ -115,3 +115,11 @@ and they were canonicalised by whichever RDKit version produced the file. A diff
 (equally valid) string for a small share of molecules, which then count as non-hits. If your RDKit differs from the one that
 wrote the file, add `--recanonicalise` to `real-scan`; it parses every catalogue line and is much slower. Shard headers and
 `real_lookup/meta.json` record the RDKit version and whether this option was used.
+
+### Lookup provenance
+
+Evaluation checks the names, sizes and SHA-256 content hashes of the catalogue files recorded in a REAL lookup, so a lookup
+built from a different catalogue or with a different matching policy is refused and has to be rebuilt. Hashing a full
+catalogue is slow the first time; a file whose path, size and modification time are unchanged is not hashed again (the result is
+kept in `.verified.json` inside the lookup folder). A partial scan keeps its positive hits and leaves all other queries
+unknown until every catalogue shard has been scanned.

@@ -102,15 +102,26 @@ def merge_shards(queries_file: str, hit_files: List[str], out_dir: str) -> dict:
             if name in file_map and file_map[name] != v:
                 raise ValueError(f"catalogue file {name} has different content in two shard files")
             file_map[name] = v
+    for m in metas:
+        if not isinstance(m.get("files"), dict) or len(m["files"]) != m.get("n_files_in_shard"):
+            raise ValueError("shard is missing file content provenance")
+        if not isinstance(m.get("shard"), int) or not isinstance(n, int) or n < 1 or not 0 <= m["shard"] < n:
+            raise ValueError("invalid shard number or shard count")
     present = sorted({m["shard"] for m in metas})
     dup = [s for s in present if sum(1 for m in metas if m["shard"] == s) > 1]
     complete = present == list(range(n))
+    if complete and len(file_map) != metas[0]["n_catalogue_files"]:
+        raise ValueError("complete scan does not cover every catalogue file")
     lk = RealLookup.load(out_dir) if os.path.isdir(out_dir) else RealLookup()
     prev = {}
     mp = os.path.join(out_dir, "meta.json")
     if os.path.exists(mp):
         with open(mp) as fh:
             prev = json.load(fh)
+        for scan in prev.get("scans", []):
+            for key in ("recanonicalised", "rdkit_version"):
+                if scan.get(key) != metas[0][key]:
+                    raise ValueError(f"lookup matching policy changed ({key}); use a new --out folder")
         old_cat = {s.get("catalogue_sha256") for s in prev.get("scans", [])}
         if old_cat and metas[0]["catalogue_sha256"] not in old_cat:
             raise ValueError(f"{out_dir} already holds lookups from a different catalogue; use a new --out folder")
@@ -137,9 +148,13 @@ def merge_shards(queries_file: str, hit_files: List[str], out_dir: str) -> dict:
     return scan
 
 
-def check_lookup_matches_catalogue(lookup_dir: str, catalogue_path: str, verify_content: bool = False) -> None:
-    """Refuse a lookup that was not made from the catalogue that is configured now. Names and sizes are always compared;
-    with verify_content every file is hashed (slow for a full REAL copy) and compared with the hashes recorded at scan time."""
+def check_lookup_matches_catalogue(lookup_dir: str, catalogue_path: str) -> None:
+    """Refuse a lookup that was not built from the catalogue that is configured now.
+
+    File names and sizes are compared first, then the content of every recorded shard file is checked against the SHA-256
+    recorded at scan time. Hashing a full REAL copy is slow, so a file whose size and modification time are unchanged since
+    it was last verified at the same path against the same recorded hash is not hashed again (kept in `<lookup>/.verified.json`).
+    Unscanned shards may stay unknown; an unverified lookup never yields measured values."""
     mp = os.path.join(lookup_dir, "meta.json")
     if not os.path.exists(mp):
         raise ValueError(f"{lookup_dir} has no meta.json: it was not written by `synspeq real-merge`, so it cannot be tied to a catalogue")
@@ -154,10 +169,44 @@ def check_lookup_matches_catalogue(lookup_dir: str, catalogue_path: str, verify_
     if bad:
         raise ValueError(f"{lookup_dir} was built from a different catalogue than {catalogue_path} (file names or sizes differ); "
                          "re-run `real-scan` and `real-merge` for the configured catalogue")
-    if verify_content:
-        from ..hashing import file_sha256
-        rec = meta.get("files", {})
-        for f in files:
-            name = os.path.basename(f)
-            if name in rec and file_sha256(f) != rec[name][1]:
-                raise ValueError(f"catalogue file {name} differs in content from the version this lookup was built from")
+    from ..hashing import file_sha256
+    rec = meta.get("files")
+    if not isinstance(rec, dict) or not rec:
+        raise ValueError(f"{lookup_dir}: missing catalogue content provenance; rebuild the lookup")
+    current = {os.path.basename(f): f for f in files}
+    if set(rec) - set(current):
+        raise ValueError("lookup refers to files absent from the configured catalogue")
+    if any(s.get("complete") for s in scans) and set(rec) != set(current):
+        raise ValueError("complete lookup lacks content provenance for some catalogue files")
+    cache_path = os.path.join(lookup_dir, ".verified.json")
+    try:
+        with open(cache_path) as fh:
+            cache = json.load(fh)
+        if not isinstance(cache, dict):
+            cache = {}
+    except (OSError, ValueError):
+        cache = {}
+    changed = False
+    for name, identity in rec.items():
+        if not isinstance(identity, list) or len(identity) != 2:
+            raise ValueError(f"invalid catalogue content provenance for {name}")
+        st = os.stat(current[name])
+        if st.st_size != identity[0]:
+            raise ValueError(f"catalogue file {name} differs in content from the version this lookup was built from")
+        where = os.path.realpath(current[name])
+        seen = cache.get(name)
+        if (isinstance(seen, list) and len(seen) == 4 and seen[0] == st.st_size and seen[1] == st.st_mtime_ns
+                and seen[2] == identity[1] and seen[3] == where):
+            continue
+        if file_sha256(current[name]) != identity[1]:
+            raise ValueError(f"catalogue file {name} differs in content from the version this lookup was built from")
+        cache[name] = [st.st_size, st.st_mtime_ns, identity[1], where]
+        changed = True
+    if changed:
+        try:
+            tmp = cache_path + ".tmp"
+            with open(tmp, "w") as fh:
+                json.dump(cache, fh)
+            os.replace(tmp, cache_path)
+        except OSError:
+            pass                                               # a read-only lookup folder simply re-verifies next time

@@ -143,13 +143,26 @@ class FeatureCache:
     """reaction string -> feature row, kept as JSON lines so interrupted runs resume. Rows carry the cache key (`_db`) of the
     database and software that produced them; rows with another key are ignored, never reused.
 
-    A final line without a newline is an interrupted append: it is dropped (with a note) and the file is truncated back to
-    the last complete row. A corrupt line anywhere else is an error, because silently skipping it could hide data loss."""
+    An incomplete final JSON object is dropped and the file is truncated to the last complete row.
+    A complete final object without its newline is retained and its newline restored under the append lock.
+    A corrupt line anywhere else is an error, because silently skipping it could hide data loss."""
 
     def __init__(self, path: str, db_tag: str):
         self.path, self.db_tag, self.rows, self.recovered_truncated_tail = path, db_tag, {}, False
         if not os.path.exists(path):
             return
+        from ..locking import file_lock
+        try:
+            # Recovery mutates the file, so it runs under the same lock as appenders.
+            with file_lock(path + ".lock"):
+                self._load(repair=True)
+        except OSError:
+            # The folder is read-only (no lock file can be created): use every complete row, repair nothing.
+            self.rows, self.recovered_truncated_tail = {}, False
+            self._load(repair=False)
+
+    def _load(self, repair: bool) -> None:
+        path, db_tag = self.path, self.db_tag
         with open(path, "rb") as fh:
             data = fh.read()
         good_end = 0
@@ -170,6 +183,8 @@ class FeatureCache:
                     self.rows[d["rxn"]] = d
             good_end = end
             pos = end
+        if not repair:
+            return
         if self.recovered_truncated_tail:
             with open(path, "r+b") as fh:
                 fh.truncate(good_end)

@@ -140,9 +140,9 @@ class LookupProvenance(Tmp):
             merge_shards(q, [self.p("hB.txt")], self.p("lk"))              # old hits must not survive a catalogue change
         # and with content verification the active-catalogue check catches it too
         from synspeq.purchasing.realscan import check_lookup_matches_catalogue
-        check_lookup_matches_catalogue(self.p("lk"), self.p("A"), verify_content=True)
+        check_lookup_matches_catalogue(self.p("lk"), self.p("A"))
         with self.assertRaises(ValueError):
-            check_lookup_matches_catalogue(self.p("lk"), self.p("B"), verify_content=True)
+            check_lookup_matches_catalogue(self.p("lk"), self.p("B"))
 
     def test_truncated_or_edited_shard_file_is_refused(self):
         self.write("REAL/part0.smi", "CCO\nCCN\n")

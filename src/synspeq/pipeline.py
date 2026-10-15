@@ -31,23 +31,36 @@ def load_outcomes(pop: Population, routes_dirs, use_titles: bool = True) -> Dict
     Lookup order: `<mol_id>.json` (records written by `synspeq plan`), then, when `use_titles` is true, `<title>.json` where
     the title is the source record's name (records from an earlier AiZynthFinder run named after the molecule). A record found
     by title is accepted only if (a) the title is a plain file name inside the records folder and (b) the molecule named in
-    the record is the molecule being evaluated; a mismatch is an execution_error, not a result for another molecule.
+    the record is the molecule being evaluated. Titles shared by the same identity across evaluation units and
+    conflicting records across folders are execution errors. Byte-identical duplicate records are accepted.
     """
+    from collections import Counter
+    from .hashing import file_sha256
+    from .routes.aizynth import RouteOutcome
+    # Identity alone cannot associate two pocket-specific planner attempts.
+    title_units = Counter((m.source_record.name, m.identity) for m in pop.molecules)
+    directories = list(routes_dirs)
     out: Dict[str, object] = {}
     for m in pop.molecules:
         name = m.source_record.name
-        # an exact molecule-id record in ANY folder wins over a title match in any folder
         cands = [m.mol_id] + ([name] if use_titles and _safe_component(name) else [])
         path = None
+        why = None
         for c in cands:
-            for d in routes_dirs:
-                f = os.path.join(d, f"{c}.json")
-                if os.path.isfile(f) and _contained(d, f):
-                    path = f
-                    break
-            if path:
-                break
-        out[m.mol_id] = load_outcome(path, expected_identity=m.identity)
+            matches = sorted({os.path.realpath(os.path.join(d, f"{c}.json")) for d in directories
+                              if os.path.isfile(os.path.join(d, f"{c}.json"))
+                              and _contained(d, os.path.join(d, f"{c}.json"))})
+            if not matches:
+                continue
+            if c != m.mol_id and title_units[(name, m.identity)] > 1:
+                why = "ambiguous title record shared by multiple evaluation units; use molecule-ID filenames"
+            elif len(matches) > 1 and len({file_sha256(f) for f in matches}) > 1:
+                why = "conflicting planner records across route directories; provide one source per molecule ID"
+            else:
+                path = matches[0]
+            break
+        out[m.mol_id] = (RouteOutcome("execution_error", error=why) if why
+                         else load_outcome(path, expected_identity=m.identity))
     return out
 
 
@@ -58,7 +71,7 @@ def _status(res: Resolution, p: str):
 
 def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_dir: str, store_entries: dict,
              real_lookup_dir: Optional[str] = None, scaffold_prior: Optional[dict] = None, n_sub: int = 3000,
-             cache_dir: Optional[str] = None, verify_catalogue: bool = False) -> dict:
+             cache_dir: Optional[str] = None) -> dict:
     os.makedirs(out_dir, exist_ok=True)
     report: dict = dict(synspeq_version=__version__, identity_policy=POLICY_ID, population=pop.accounting(),
                         resources={k: dict(state=s.state, path=(os.path.basename(s.path.rstrip(os.sep)) if s.path else None), requested_by=s.requested_by, **{x: store_entries.get(k, {}).get(x) for x in ("sha256", "size_bytes", "snapshot_date", "listing_sha256")})
@@ -96,7 +109,7 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
             real = RealLookup.load(real_lookup_dir) if real_lookup_dir else RealLookup()
             if real_lookup_dir:
                 from .purchasing.realscan import check_lookup_matches_catalogue
-                check_lookup_matches_catalogue(real_lookup_dir, res.states["enamine_real"].path, verify_content=verify_catalogue)
+                check_lookup_matches_catalogue(real_lookup_dir, res.states["enamine_real"].path)
         cat = Catalogue(bb, real)
         if real is not None:
             q = frontier_queries(outcomes, cat)
