@@ -1,5 +1,5 @@
-"""Regression tests for the independent pre-release review (findings F01-F22). Each test reproduces the review's input and
-asserts the value written down BEFORE looking at the code's answer (hand-computed or taken from the stated rule)."""
+"""Regression tests. Each test reproduces a concrete failing input and asserts the value written down BEFORE looking at the
+code's answer (hand-computed or taken from the stated rule)."""
 import gzip, json, multiprocessing, os, re, shlex, shutil, tempfile, unittest
 from unittest import mock
 from rdkit import Chem
@@ -51,7 +51,7 @@ class Tmp(unittest.TestCase):
 
 
 class PlannerRecordBinding(Tmp):
-    def test_F01_title_collision_does_not_bind_the_wrong_molecule(self):
+    def test_title_collision_does_not_bind_the_wrong_molecule(self):
         sdf = self.p("m.sdf")
         write_sdf(sdf, [("same", "CCO", {}), ("same", "CCN", {})])
         os.makedirs(self.p("r"))
@@ -66,7 +66,7 @@ class PlannerRecordBinding(Tmp):
         self.assertFalse(r["complete"])
         self.assertAlmostEqual(r["find"], 0.5)
 
-    def test_F09_missing_pocket_and_literal_none_are_two_units(self):
+    def test_missing_pocket_and_literal_none_are_two_units(self):
         sdf = self.p("m.sdf")
         write_sdf(sdf, [("a", "CCO", {}), ("b", "CCO", {"pocket_id": "None"})])
         pop = make_population(read_sdf(sdf), "t", pocket_field="pocket_id")
@@ -81,7 +81,7 @@ class PlannerRecordBinding(Tmp):
         with self.assertRaises(ValueError):
             make_population(read_sdf(sdf), "t", pocket_field="pocket_id")      # typo
 
-    def test_F14_title_cannot_escape_the_records_folder(self):
+    def test_title_cannot_escape_the_records_folder(self):
         sdf = self.p("m.sdf")
         write_sdf(sdf, [("../outside", "CCO", {}), (self.p("abs"), "CCN", {})])
         os.makedirs(self.p("r"))
@@ -100,10 +100,10 @@ class PlannerRecordBinding(Tmp):
         self.assertEqual(list(load_outcomes(pop, [self.p("r")], use_titles=False).values())[0].outcome, "pending")
 
 
-class SecondReview(Tmp):
-    """Findings of the review of the fixes."""
+class LookupProvenance(Tmp):
+    """Planner-record precedence and catalogue provenance."""
 
-    def test_R1_exact_id_record_in_a_later_folder_beats_a_title_record_in_an_earlier_one(self):
+    def test_exact_id_record_in_a_later_folder_beats_a_title_record_in_an_earlier_one(self):
         sdf = self.p("m.sdf")
         write_sdf(sdf, [("ethanol", "CCO", {"pocket": "A"})])
         pop = make_population(read_sdf(sdf), "t", pocket_field="pocket")
@@ -114,7 +114,7 @@ class SecondReview(Tmp):
         out = load_outcomes(pop, [self.p("r1"), self.p("r2")])
         self.assertEqual(out[mid].outcome, "unresolved")                 # the exact record, not the title match
 
-    def test_R2_lookup_from_another_catalogue_is_refused(self):
+    def test_lookup_from_another_catalogue_is_refused(self):
         from synspeq.purchasing.realscan import check_lookup_matches_catalogue
         self.write("A/part0.smi", "CCO\n")
         self.write("B/part0.smi", "CCO\nCCN\n")                         # different size
@@ -129,7 +129,7 @@ class SecondReview(Tmp):
         with self.assertRaises(ValueError):                                # no provenance at all
             check_lookup_matches_catalogue(self.p("legacy"), self.p("A"))
 
-    def test_R3_same_names_and_sizes_but_other_content_is_a_different_catalogue(self):
+    def test_same_names_and_sizes_but_other_content_is_a_different_catalogue(self):
         self.write("A/part0.smi", "CCO\nCCN\n")
         self.write("B/part0.smi", "CCC\nCCN\n")                         # same name, same size, different molecule
         q = self.write("q.smi", "CCO\nCCC\n")
@@ -144,7 +144,7 @@ class SecondReview(Tmp):
         with self.assertRaises(ValueError):
             check_lookup_matches_catalogue(self.p("lk"), self.p("B"), verify_content=True)
 
-    def test_R4_truncated_or_edited_shard_file_is_refused(self):
+    def test_truncated_or_edited_shard_file_is_refused(self):
         self.write("REAL/part0.smi", "CCO\nCCN\n")
         q = self.write("q.smi", "CCO\nCCN\nCCC\n")
         scan_shard(q, self.p("REAL"), 0, 1, self.p("h.txt"))
@@ -157,7 +157,7 @@ class SecondReview(Tmp):
         with self.assertRaises(ValueError):
             merge_shards(q, [self.p("edit.txt")], self.p("lk2"))
 
-    def test_R5_valid_last_row_without_newline_is_not_glued_to_the_next(self):
+    def test_valid_last_row_without_newline_is_not_glued_to_the_next(self):
         from synspeq.support.engine import FeatureCache
         row = json.dumps({"rxn": "A>>B", "_db": "k", "prep_status": "ok"})
         f = self.write("f.jsonl", row)                                     # complete JSON, no trailing newline
@@ -172,7 +172,7 @@ class SecondReview(Tmp):
         c2.get_or_compute("E>>F", lambda r: {"rxn": r, "prep_status": "ok"})
         self.assertEqual(set(FeatureCache(g, "k").rows), {"A>>B", "E>>F"})
 
-    def test_R6_unparseable_molecule_strings_in_a_route_are_rejected(self):
+    def test_unparseable_molecule_strings_in_a_route_are_rejected(self):
         t = mol("CCO", [rxn(mol("not_a_smiles", stock=True))])
         o = classify_planner_json({"smiles": "CCO", "solvable": True, "n_steps": 1, "trees": [t]})
         self.assertEqual(o.outcome, "execution_error")
@@ -205,7 +205,7 @@ class Workflows(Tmp):
 
 
 class RecordSchema(Tmp):
-    def test_F10_malformed_records_are_errors_not_chemistry(self):
+    def test_malformed_records_are_errors_not_chemistry(self):
         cases = {
             "solvable_string": {"smiles": "CCO", "solvable": "false", "n_steps": 0, "trees": []},
             "reaction_without_reactants": {"smiles": "CCO", "solvable": True, "n_steps": 1, "trees": [mol("CCO", [rxn()])]},
@@ -218,7 +218,7 @@ class RecordSchema(Tmp):
             self.assertEqual(o.outcome, "execution_error", name)
             self.assertTrue(o.error, name)
 
-    def test_F15_wrong_json_shapes_do_not_raise(self):
+    def test_wrong_json_shapes_do_not_raise(self):
         for i, text in enumerate(['[]', 'null', '"x"', '{"solvable": true, "trees": 1}', '{"solvable": false, "trees": [null]}',
                                   '{"solvable": false, "trees": [], "n_steps": []}', '{"solvable": fal', '']):
             f = self.write(f"c{i}.json", text)
@@ -230,7 +230,7 @@ class RecordSchema(Tmp):
 
 
 class Resources(Tmp):
-    def test_F13_concurrent_registration_keeps_every_entry(self):
+    def test_concurrent_registration_keeps_every_entry(self):
         root = self.p("store")
         files = []
         for i in range(8):
@@ -244,9 +244,9 @@ class Resources(Tmp):
         self.assertEqual([q.exitcode for q in procs], [0] * 8)
         self.assertEqual(sorted(Store(root).all()), [f"res{i}" for i in range(8)])
 
-    def test_F13_forced_interleaving_loses_nothing(self):
+    def test_forced_interleaving_loses_nothing(self):
         """Both writers read the registry, then one is slowed inside the save: without a transaction lock the second save
-        overwrites the first (the review's forced schedule)."""
+        overwrites the first (a forced interleaving)."""
         import threading, time
         root = self.p("store")
         f1, f2 = self.write("a.smi", "CCO\n"), self.write("b.smi", "CCN\n")
@@ -269,7 +269,7 @@ class Resources(Tmp):
         self.assertEqual(errors, [])
         self.assertEqual(sorted(Store(root).all()), ["one", "two"])
 
-    def test_F07_unusable_catalogues_are_invalid(self):
+    def test_unusable_catalogues_are_invalid(self):
         os.makedirs(self.p("dir"))
         self.write("dir/README.txt", "This directory contains the catalogue.\nSee the website.\n")
         st = Store(self.p("s"))
@@ -284,7 +284,7 @@ class Resources(Tmp):
         self.assertEqual(r.states["enamine_real"].state, "invalid")
         self.assertEqual(r.exit_code, 2)
 
-    def test_F08_catalogue_reader_keeps_a_last_record_without_terminator(self):
+    def test_catalogue_reader_keeps_a_last_record_without_terminator(self):
         sdf = self.p("bb.sdf")
         write_sdf(sdf, [("a", "CCO", {}), ("b", "CCN", {})])
         txt = open(sdf).read()
@@ -295,7 +295,7 @@ class Resources(Tmp):
         self.assertEqual(load_building_blocks(sdf), {"CCO", "CCN"})
         self.assertEqual(Store(self.p("s")).register("enamine_bb", sdf, fmt="sdf")["validation"]["n_records"], 2)
 
-    def test_F06_changed_registered_file_is_not_trusted(self):
+    def test_changed_registered_file_is_not_trusted(self):
         f = self.write("bb.smi", "CCO\nCCN\n")
         st = Store(self.p("s"))
         st.register("enamine_bb", f, fmt="smiles")
@@ -311,7 +311,7 @@ class Resources(Tmp):
             fh.write("this is not a catalogue\n" * 10)
         self.assertEqual(resolve(cfg, load_manifest(), st, mode="replay").states["enamine_bb"].state, "invalid")
 
-    def test_F06_plan_fingerprint_sees_content_of_same_named_stocks(self):
+    def test_plan_fingerprint_sees_content_of_same_named_stocks(self):
         from synspeq.cli import _check_plan_fingerprint
         os.makedirs(self.p("m"))
         self.write("m/config.yml", "expansion: {}\n")
@@ -330,7 +330,7 @@ class Resources(Tmp):
         self.write("m/uspto_model.onnx", "other-model-bytes")                              # same size not needed: content differs
         self.assertEqual(_check_plan_fingerprint(out, Res, Store_, {"s": a}), 2)
 
-    def test_F16_partial_planner_stock_blocks_planning(self):
+    def test_partial_planner_stock_blocks_planning(self):
         f = self.write("zinc.smi", "CCO\nCCN\n")
         st = Store(self.p("s"))
         st.register("aizynth_zinc", f, fmt="smiles", coverage={"fraction": 0.5})
@@ -354,7 +354,7 @@ class Resources(Tmp):
         self.assertEqual(r.planner_stocks, ["enamine_bb"])
         self.assertEqual(r.states["aizynth_zinc"].state, "not_requested")
 
-    def test_F03_smiles_catalogue_becomes_an_inchikey_stock(self):
+    def test_smiles_catalogue_becomes_an_inchikey_stock(self):
         from synspeq.resources.stocks import compiled_planner_stock
         f = self.write("bb.smi", "CCO\nCCN\nnot_a_smiles\n")
         out = compiled_planner_stock("enamine_bb", f, self.p("cache"))
@@ -375,7 +375,7 @@ class Resources(Tmp):
         self.assertIn(Molecule(smiles="CCN"), q)
         self.assertNotIn(Molecule(smiles="CCC"), q)
 
-    def test_F18_config_data_dir_selects_the_store(self):
+    def test_config_data_dir_selects_the_store(self):
         bb = self.write("bb.smi", "CCO\n")
         Store(self.p("good")).register("enamine_bb", bb, fmt="smiles")
         cfg = self.write("c.yaml", f"data_dir: {self.p('good')}\nresources: [enamine_bb]\npillars: [P1, P3]\n")
@@ -410,7 +410,7 @@ class RealScan(Tmp):
         self.write("REAL/part1.smi", "CCN\nCCCC\n")
         return self.p("REAL")
 
-    def test_F02_partial_scan_keeps_unqueried_shards_unknown(self):
+    def test_partial_scan_keeps_unqueried_shards_unknown(self):
         real = self._catalogue()
         q = self.write("q.smi", "CCN\nOCCO\n")                     # CCN is in part1 only; OCCO is in neither
         scan_shard(q, real, 0, 2, self.p("h0.txt"))
@@ -448,7 +448,7 @@ class RealScan(Tmp):
 
 
 class Metrics(Tmp):
-    def test_F11_unmeasured_on_demand_share_is_null(self):
+    def test_unmeasured_on_demand_share_is_null(self):
         sdf = self.p("m.sdf"); write_sdf(sdf, [("a", "CCCCO", {})])
         t = mol("CCCCO", [rxn(mol("CCCO", stock=False, children=[rxn(mol("CCO", stock=True), mol("CO", stock=True))]), mol("CC", stock=True))])
         pop = make_population(read_sdf(sdf), "t")
@@ -460,14 +460,14 @@ class Metrics(Tmp):
         r = compute_p3(pop, o, Catalogue({"CCCO"}, RealLookup()))
         self.assertEqual(r["needs_on_demand_status"], "bound")       # nothing was looked up in REAL yet
 
-    def test_F12_prior_and_query_use_the_same_scaffold_policy(self):
+    def test_prior_and_query_use_the_same_scaffold_policy(self):
         smiles = ["c1ccccc1"] * 6 + ["CCO"] * 4
         prior = scaffold_prior(smiles)
         self.assertNotIn("", prior)
         from synspeq.coverage import generic_scaffold
         self.assertAlmostEqual(cosine_to_prior([generic_scaffold(s) for s in smiles], prior), 1.0)
 
-    def test_F20_undefined_distributions_are_null(self):
+    def test_undefined_distributions_are_null(self):
         self.assertEqual(n50_csr([]), (None, 0, None, 0))
         self.assertEqual(n50_csr(["", "", None]), (None, 0, None, 0))
         self.assertEqual(n50_csr(["A"])[0], 1)                       # a single cyclic molecule is defined
@@ -482,7 +482,7 @@ class Metrics(Tmp):
 
 
 class Caches(Tmp):
-    def test_F17_interrupted_append_is_recovered_interior_corruption_is_not(self):
+    def test_interrupted_append_is_recovered_interior_corruption_is_not(self):
         from synspeq.support.engine import FeatureCache
         good = json.dumps({"rxn": "A>>B", "_db": "k", "prep_status": "ok"}) + "\n"
         f = self.write("f.jsonl", good + '{"rxn": ')
@@ -498,7 +498,7 @@ class Caches(Tmp):
         # rows made under another key are ignored, not reused
         self.assertEqual(FeatureCache(f, "other").rows, {})
 
-    def test_F05_features_are_not_reused_across_databases(self):
+    def test_features_are_not_reused_across_databases(self):
         import pandas as pd
         out, cache = self.p("o"), self.p("c")
         db_a, db_b = self.p("a", "db.parquet"), self.p("b", "db.parquet")
@@ -517,7 +517,7 @@ class Caches(Tmp):
         self.assertEqual((ra["X>>Y"]["v"], rb["X>>Y"]["v"], ra2["X>>Y"]["v"]), (1, 0, 1))
         self.assertEqual(calls, ["CC>>CCO", "CC>>CCN"])             # A's row is reused for A, never for B
 
-    def test_F04_identity_cache_belongs_to_one_database(self):
+    def test_identity_cache_belongs_to_one_database(self):
         import pandas as pd
         from synspeq.support.index import PrecedentIndex, key_hash, rxn_key
         cache = self.p("ids.parquet")
@@ -537,7 +537,7 @@ class Caches(Tmp):
 
 
 class Interfaces(Tmp):
-    def test_F19_invalid_counts_are_rejected(self):
+    def test_invalid_counts_are_rejected(self):
         sdf = self.p("m.sdf"); write_sdf(sdf, [(str(i), "C" * (i + 1), {}) for i in range(4)])
         for kw in ({"last": 0}, {"first": -1}, {"last": -1}):
             with self.assertRaises(ValueError):
@@ -551,7 +551,7 @@ class Interfaces(Tmp):
         with self.assertRaises(SystemExit):
             build_parser().parse_args(["plan", sdf, "--out", "o", "--workers", "0"])
 
-    def test_F22_bad_gzip_is_a_message_not_a_traceback(self):
+    def test_bad_gzip_is_a_message_not_a_traceback(self):
         f = self.write("bad.sdf.gz", "this is not gzip")
         import contextlib, io
         err = io.StringIO()
@@ -560,7 +560,7 @@ class Interfaces(Tmp):
         self.assertEqual(rc, 2)
         self.assertIn("synspeq: error", err.getvalue())
 
-    def test_F21_every_documented_command_parses(self):
+    def test_every_documented_command_parses(self):
         """Commands printed in README.md and docs/DATA_RESOURCES_GUIDE.md must be accepted by the real argument parser."""
         parser = build_parser()
         n = 0

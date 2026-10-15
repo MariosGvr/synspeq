@@ -165,7 +165,6 @@ core package is in [`conda/`](conda).
 ## Status
 Early development. All four pillars and live planning are implemented, and the package produces an HTML report.
 Multi-population comparison plots and a PyPI / conda-forge release are planned.
-v1 does not include analysis of generator-supplied routes or Chemformer.
 
 ## Contributing and testing
 ```bash
