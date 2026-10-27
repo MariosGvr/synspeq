@@ -97,6 +97,10 @@ The input has seven valid records and one invalid record. One molecule appears t
 are evaluated. Outputs include the HTML report, `report.json`, per-molecule results in `molecules.csv` and resource
 metadata in `run_manifest.json`. The manifest records the resources used, including their sizes and checksums.
 
+## Minimum setup and the paper's resources
+[`docs/MINIMUM_SETUP.md`](docs/MINIMUM_SETUP.md) lists the two free downloads that are enough to run Pillars 1, 2 and 4, and what each pillar needs.
+[`docs/PAPER_RESOURCES.md`](docs/PAPER_RESOURCES.md) records the catalogues, dates and sizes behind the paper's results and how to rebuild its planner stock.
+
 ## Comparing tools
 SYNSPEQ scores any set of molecules however it was produced, so fair comparisons also depend on how the sets were made:
 see [`docs/COMPARING_TOOLS.md`](docs/COMPARING_TOOLS.md) for what to fix, report and disclose, and how to run your own tool.
