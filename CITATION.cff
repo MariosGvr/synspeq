@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use SYNSPEQ, please cite it using the metadata below."
+title: "SYNSPEQ: SYNthesizability through Standardised Planner Evaluation and Quantification"
+type: software
+version: 0.1.0.dev0
+license: Apache-2.0
+repository-code: "https://github.com/MariosGvr/synspeq"
+authors:
+  - family-names: Gavrielatos
+    given-names: Marios
+    affiliation: "Department of Computational and Systems Biology, University of Pittsburgh"
+  - family-names: Koes
+    given-names: David R.
+    affiliation: "Department of Computational and Systems Biology, University of Pittsburgh"
+keywords:
+  - synthesizability
+  - retrosynthesis
+  - evaluation
+  - generative models
+# Add `doi` and `date-released` when a tagged release is archived.

@@ -97,6 +97,10 @@ The input has seven valid records and one invalid record. One molecule appears t
 are evaluated. Outputs include the HTML report, `report.json`, per-molecule results in `molecules.csv` and resource
 metadata in `run_manifest.json`. The manifest records the resources used, including their sizes and checksums.
 
+## Comparing tools
+SYNSPEQ scores any set of molecules however it was produced, so fair comparisons also depend on how the sets were made:
+see [`docs/COMPARING_TOOLS.md`](docs/COMPARING_TOOLS.md) for what to fix, report and disclose, and how to run your own tool.
+
 ## Reporting conventions
 - **Missing resources.** Missing resources are reported as *not assessed*, *unavailable*, *bound* or *blocked*. These
   states are not reported as 0%.
@@ -177,6 +181,10 @@ SYNSPEQ builds on [AiZynthFinder](https://github.com/MolecularAI/aizynthfinder) 
 [Rxn-INSIGHT](https://github.com/mrodobbe/Rxn-INSIGHT) (MIT), [RXNMapper](https://github.com/rxn4chemistry/rxnmapper) (MIT),
 [RDKit](https://www.rdkit.org) (BSD), the USPTO reaction data distributed with Rxn-INSIGHT (CC BY 4.0) and the ZINC database.
 Cite the works corresponding to the components you use. `synspeq data info <id>` lists their references.
+
+## Citing
+Citation metadata is in [`CITATION.cff`](CITATION.cff) (GitHub shows it under "Cite this repository"). Versions behind the
+reported results are pinned in [`constraints.txt`](constraints.txt): `pip install -e . -c constraints.txt`.
 
 ## Licence
 Copyright 2026 The SYNSPEQ authors. Released under the [Apache License 2.0](LICENSE).
