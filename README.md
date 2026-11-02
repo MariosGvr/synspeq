@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <b>SYN</b>thesizability through <b>S</b>tandardised <b>P</b>lanner <b>E</b>valuation and <b>Q</b>uantification<br>
+  <b>SYN</b>thesizability through <b>S</b>tandardized <b>P</b>lanner <b>E</b>valuation and <b>Q</b>uantification<br>
   SYNSPEQ reports route recovery, chemical support, deliverability and scaffold coverage.
 </p>
 

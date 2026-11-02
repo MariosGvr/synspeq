@@ -39,7 +39,7 @@ test:
 
 about:
   home: https://github.com/MariosGvr/synspeq
-  summary: SYNthesizability through Standardised Planner Evaluation and Quantification
+  summary: SYNthesizability through Standardized Planner Evaluation and Quantification
   description: |
     Four-pillar evaluation of molecule sets (route recovery, retrieved precedent support, purchasing
     deliverability, coverage). Core install only; the optional planner (AiZynthFinder) and Pillar 2

@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use SYNSPEQ, please cite it using the metadata below."
-title: "SYNSPEQ: SYNthesizability through Standardised Planner Evaluation and Quantification"
+title: "SYNSPEQ: SYNthesizability through Standardized Planner Evaluation and Quantification"
 type: software
 version: 0.1.0.dev0
 license: Apache-2.0
