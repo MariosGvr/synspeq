@@ -41,8 +41,8 @@ about:
   home: https://github.com/MariosGvr/synspeq
   summary: SYNthesizability through Standardized Planner Evaluation and Quantification
   description: |
-    Four-pillar evaluation of molecule sets (route recovery, retrieved precedent support, purchasing
-    deliverability, coverage). Core install only; the optional planner (AiZynthFinder) and Pillar 2
+    Evaluation of molecule sets by four measures (findability, retrieved precedent support, residual steps
+    after purchasing, scaffold diversity). Core install only; the optional planner (AiZynthFinder) and precedent support
     (Rxn-INSIGHT, RXNMapper) come from environment.yml because they are PyPI-only.
   license: Apache-2.0
   license_file: LICENSE

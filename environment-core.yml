@@ -1,4 +1,4 @@
-# Minimal install: ingestion, Pillar 1 replay, Pillar 3, Pillar 4 (no planner, no Pillar 2).
+# Minimal install: ingestion, findability replay, residual steps, scaffold diversity (no planner, no precedent support).
 name: synspeq-core
 channels:
   - conda-forge

@@ -1,5 +1,5 @@
 # One-command install:  conda env create -f environment.yml   (then: conda activate synspeq)
-# Everything SYNSPEQ needs, including the optional planner (AiZynthFinder) and Pillar 2 (Rxn-INSIGHT + RXNMapper).
+# Everything SYNSPEQ needs, including the optional planner (AiZynthFinder) and precedent support (Rxn-INSIGHT + RXNMapper).
 # The pins follow AiZynthFinder 4.4.1 (rdkit < 2024, numpy < 2, pandas < 3, python < 3.13).
 name: synspeq
 channels:

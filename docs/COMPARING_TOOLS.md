@@ -5,7 +5,7 @@ filtered or selected, so a fair comparison between tools depends on choices made
 This page lists those choices. Results are comparable only when the points below hold.
 
 ## 1. Fix the resources
-Use the same planner stock, planner settings and purchasing catalogue for every tool. SYNSPEQ records them with every run
+Use the same planner stock, planner settings and purchasing catalog for every tool. SYNSPEQ records them with every run
 and refuses to reuse a results folder whose stock, model files or settings have changed, so two runs that differ in them
 cannot be mixed by accident. Give each configuration its own `--out`.
 
@@ -34,8 +34,8 @@ deterministic: SYNSPEQ reuses the records and recomputes the summaries.
 - Every departure from the tool's documented settings, tabulated per row, and which rows could not be matched. Do not use
   unmatched rows in ranking statements.
 
-## 6. Report the pillars together, and beside the other objectives
-Do not collapse the four pillars into one score: they rank tools differently. Report them next to the objective the tool
+## 6. Report the measures together, and beside the other objectives
+Do not collapse the four measures into one score: they rank tools differently. Report them next to the objective the tool
 was built for and other properties, so that a gain on one is visible against its cost on the others.
 
 ## 7. Missing resources are not zero

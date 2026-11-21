@@ -61,6 +61,6 @@ bad.SetProp("_Name", "bad_record")
 blocks += Chem.MolToMolBlock(bad, kekulize=False) + ">  <pocket_id>\npocket_B\n\n$$$$\n"
 open(os.path.join(HERE, "molecules.sdf"), "w").write(blocks)
 
-# a tiny purchasing catalogue: the nitrile intermediate of the ibuprofen route is stocked
+# a tiny purchasing catalog: the nitrile intermediate of the ibuprofen route is stocked
 open(os.path.join(HERE, "building_blocks.smi"), "w").write("CC(C)Cc1ccc(C(C)C#N)cc1\nNc1ccc(C(=O)O)cc1\n")
 print("demo written to", os.path.relpath(HERE))

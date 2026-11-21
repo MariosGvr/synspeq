@@ -1,7 +1,7 @@
 # Resources behind the paper's numbers, and how to rebuild the planner stock
 
 Every headline result in the paper was computed with one planner stock (**Union2026**), one set of planner models and one
-reaction database. None of the vendor catalogues is redistributed with SYNSPEQ or with the paper: terms differ by provider and
+reaction database. None of the vendor catalogs is redistributed with SYNSPEQ or with the paper: terms differ by provider and
 several restrict redistribution. This page records what was used so that you can rebuild an equivalent stock from your own
 copies. You are responsible for following each provider's terms.
 
@@ -9,14 +9,14 @@ copies. You are responsible for following each provider's terms.
 | resource | role | version or date | size | how to obtain |
 |---|---|---|---|---|
 | AiZynthFinder 4.4.1 USPTO expansion, ring-breaker and filter policies | planner models | public release (Zenodo 7797465, 7341155; CC BY 4.0) | n/a | `synspeq data download aizynth_zinc` |
-| Enamine building blocks (`enamine_bb`) | part of Union2026; purchasing catalogue for Pillar 3 | Global Stock list dated 2026-06-02 (`Enamine_Building_Blocks_Stock_1100064cmpd_20260602.sdf`) | 1,100,064 records; 1,098,867 InChIKeys | Enamine website, under its terms |
+| Enamine building blocks (`enamine_bb`) | part of Union2026; purchasing catalog for residual steps | Global Stock list dated 2026-06-02 (`Enamine_Building_Blocks_Stock_1100064cmpd_20260602.sdf`) | 1,100,064 records; 1,098,867 InChIKeys | Enamine website, under its terms |
 | ASKCOS buyables (`askcos_buyables`) | part of Union2026 | static snapshot | 193,321 | askcos-data repository (CC BY-NC-SA 4.0) |
 | ZINC20 tranches (`zinc20_tranches`) | part of Union2026 | purchasability letters A and B, all six reactivity classes, downloaded 2026-09-21 (server files dated 2025-01-28) | 10,976,655 | files.docking.org/2D |
 | eMolecules building blocks (`emolecules_bb`) | part of Union2026 | order-building-block parent structures (salts removed), file dated 2026-09-06 | 5,172,254 | provider |
-| Molport (`molport`) | part of Union2026 | full catalogue, file dated 2026-06-02 | 5,827,234 | provider (registered users) |
+| Molport (`molport`) | part of Union2026 | full catalog, file dated 2026-06-02 | 5,827,234 | provider (registered users) |
 | **Union2026** | planner stock for every headline row | built 2026-09-21 | 18,683,322 compounds in the AiZynthFinder HDF5 | rebuild, below |
-| Enamine REAL (`enamine_real`) | on-demand tier of Pillar 3 only; never a planner stock | version not recorded here | about 9.6 billion | Enamine, by request |
-| USPTO reaction database for Rxn-INSIGHT (`uspto_rxninsight_db`) | Pillar 2 | Zenodo 10.5281/zenodo.10171745 | 1,779,551 records | `synspeq data download uspto_rxninsight_db` |
+| Enamine REAL (`enamine_real`) | on-demand tier of residual steps only; never a planner stock | version not recorded here | about 9.6 billion | Enamine, by request |
+| USPTO reaction database for Rxn-INSIGHT (`uspto_rxninsight_db`) | precedent support | Zenodo 10.5281/zenodo.10171745 | 1,779,551 records | `synspeq data download uspto_rxninsight_db` |
 
 The stock counter-screen in the paper replaces Union2026 by the ASKCOS buyables alone.
 
