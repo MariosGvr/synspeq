@@ -3,8 +3,9 @@ from __future__ import annotations
 import yaml
 
 ALLOWED = {"profile", "resources", "planner_stock", "paths", "on_missing", "measures", "pillars", "data_dir", "pocket_field"}
-PILLARS = ("P1", "P2", "P3", "P4")      # internal identifiers of the four measures (the keys of report.json)
+PILLARS = ("P1", "P2", "P3", "P4")      # internal identifiers of the four measures; the output uses MEASURE_NAMES and MEASURE_KEYS
 MEASURE_NAMES = {"P1": "findability", "P2": "precedent support", "P3": "residual steps", "P4": "scaffold diversity"}
+MEASURE_KEYS = {"P1": "findability", "P2": "precedent_support", "P3": "residual_steps", "P4": "scaffold_diversity"}   # keys of report.json
 _BY_NAME = {n.replace(" ", "-"): k for k, n in MEASURE_NAMES.items()}
 
 

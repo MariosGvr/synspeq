@@ -1,10 +1,10 @@
-import gzip, json, os, tempfile, unittest
+import gzip, os, tempfile, unittest
 from rdkit import Chem
 from synspeq.identity import identity_from_smiles
 from synspeq.io import read_sdf, read_table
 from synspeq.populations import make_population
 from synspeq.routes.aizynth import classify_planner_json
-from synspeq.metrics import compute_p1
+from synspeq.metrics import compute_findability
 
 
 def mol_block(smiles, name):
@@ -159,7 +159,7 @@ class P1(unittest.TestCase):
         from synspeq.routes.aizynth import RouteOutcome
         out = {by["r0"]: RouteOutcome("direct_purchase"), by["r2"]: RouteOutcome("routed"), by["r3"]: RouteOutcome("unresolved"),
                by["r4"]: RouteOutcome("routed"), by["r5"]: RouteOutcome("execution_error")}
-        r = compute_p1(pop, out)
+        r = compute_findability(pop, out)
         self.assertEqual(r["n_distinct"], 5)                  # CCO and OCC collapse
         self.assertEqual(r["n_raw_valid"], 6)
         self.assertAlmostEqual(r["find"], 3 / 5)

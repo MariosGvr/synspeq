@@ -1,7 +1,7 @@
-import json, math, os, tempfile, unittest
-from synspeq.coverage import generic_scaffold, n50_csr, subsample_n50, cosine_to_prior, scaffold_prior
+import os, tempfile, unittest
+from synspeq.coverage import generic_scaffold, n50_csr, subsample_n50, cosine_to_prior
 from synspeq.io import read_table
-from synspeq.metrics import compute_p2, compute_p3, compute_p4, required_reactions
+from synspeq.metrics import compute_precedent_support, required_reactions
 from synspeq.populations import make_population
 from synspeq.purchasing import Catalogue, RealLookup, frontier_queries, walk_frontier, scan_membership
 from synspeq.routes.aizynth import classify_planner_json
@@ -106,7 +106,7 @@ class Support(unittest.TestCase):
         self.assertEqual(molecule_state([0, 1, -1]), 1)
         self.assertEqual(molecule_state([0, -1]), -1)
 
-    def test_compute_p2_scopes(self):
+    def test_compute_precedent_support_scopes(self):
         d = tempfile.mkdtemp()
         with open(os.path.join(d, "t.csv"), "w") as fh:
             fh.write("mol_id,smiles\nr0,CCCCO\n")
@@ -119,7 +119,7 @@ class Support(unittest.TestCase):
         for r in required_reactions(pop, {mid: o}):
             feats[r] = dict(prep_status="ok", broad_best_sim=0.2)             # primary route unsupported ...
         feats[forward("CCCCO>>CCCC.O")] = dict(prep_status="ok", broad_best_sim=0.9)   # ... but the alternative is supported
-        p2 = compute_p2(pop, {mid: o}, feats)
+        p2 = compute_precedent_support(pop, {mid: o}, feats)
         self.assertEqual((p2["primary"]["supported"], p2["any_saved"]["supported"]), (0, 1))
         self.assertEqual(p2["any_saved"]["conditional"], 1.0)
         self.assertEqual(p2["molecules"][0]["any_via_alternative"], 1)

@@ -9,9 +9,8 @@ search(): similarity of the query's MACCS-key presence pattern to every database
 from __future__ import annotations
 import json
 import os
-import time
 import warnings
-from typing import Dict, List, Optional
+from typing import Optional
 import numpy as np
 from .index import PrecedentIndex, key_hash, rxn_key
 
@@ -133,6 +132,11 @@ def reaction_features(rxn: str, prep: Preprocessor, searcher: Searcher) -> dict:
     return row
 
 
+def _lock_path(path: str) -> str:
+    """Hidden lock file next to the cache, so the results folder shows no stray `.lock` file."""
+    return os.path.join(os.path.dirname(os.path.abspath(path)), "." + os.path.basename(path) + ".lock")
+
+
 def _last_byte(path: str) -> bytes:
     with open(path, "rb") as fh:
         fh.seek(-1, 2)
@@ -154,7 +158,7 @@ class FeatureCache:
         from ..locking import file_lock
         try:
             # Recovery mutates the file, so it runs under the same lock as appenders.
-            with file_lock(path + ".lock"):
+            with file_lock(_lock_path(path)):
                 self._load(repair=True)
         except OSError:
             # The folder is read-only (no lock file can be created): use every complete row, repair nothing.
@@ -199,7 +203,7 @@ class FeatureCache:
             self.rows[rxn] = row
             line = json.dumps(row, default=lambda o: None if o != o else str(o)) + "\n"
             from ..locking import file_lock
-            with file_lock(self.path + ".lock"):               # evaluators sharing an output folder append one row at a time
+            with file_lock(_lock_path(self.path)):               # evaluators sharing an output folder append one row at a time
                 with open(self.path, "ab") as fh:
                     if os.path.getsize(self.path) and _last_byte(self.path) != b"\n":
                         fh.write(b"\n")                  # never glue two rows together

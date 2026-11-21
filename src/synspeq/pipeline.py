@@ -6,8 +6,10 @@ import os
 import platform
 from typing import Dict, Optional
 from . import __version__
+from .config import MEASURE_KEYS
+from .environment import environment_info
 from .identity import POLICY_ID
-from .metrics import compute_p1, compute_p2, compute_p3, compute_p4, required_reactions
+from .metrics import compute_findability, compute_precedent_support, compute_residual_steps, compute_scaffold_diversity, required_reactions
 from .populations import Population
 from .purchasing import Catalogue, RealLookup, frontier_queries, load_building_blocks
 from .resources.policy import Resolution
@@ -76,13 +78,14 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
     report: dict = dict(synspeq_version=__version__, identity_policy=POLICY_ID, population=pop.accounting(),
                         resources={k: dict(state=s.state, path=(os.path.basename(s.path.rstrip(os.sep)) if s.path else None), requested_by=s.requested_by, **{x: store_entries.get(k, {}).get(x) for x in ("sha256", "size_bytes", "snapshot_date", "listing_sha256")})
                                    for k, s in res.states.items() if s.state != "not_requested"},
-                        status={p: dict(status=m.status, reason=m.reason, sub=m.sub) for p, m in res.metrics.items()}, banner=res.banner)
+                        status={MEASURE_KEYS[p]: dict(status=m.status, reason=m.reason, sub=m.sub) for p, m in res.metrics.items()}, banner=res.banner,
+                        environment=environment_info())
     mol_rows: Dict[str, dict] = {m.mol_id: dict(mol_id=m.mol_id, pocket=m.pocket, identity=m.identity, n_records=m.n_records) for m in pop.molecules}
 
     # ---- P1
     if _status(res, "P1") in ("value", "bound"):
-        p1 = compute_p1(pop, outcomes)
-        report["P1"] = p1
+        p1 = compute_findability(pop, outcomes)
+        report["findability"] = p1
         for mid, o in outcomes.items():
             mol_rows[mid].update(outcome=o.outcome, n_steps=o.n_steps_reported, primary_route_hash=o.primary_route_hash)
     # ---- P2
@@ -90,10 +93,10 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
         st = res.states["uspto_rxninsight_db"]
         reactions = required_reactions(pop, outcomes)
         feats = _p2_features(reactions, st.path, out_dir, cache_dir)
-        p2 = compute_p2(pop, outcomes, feats)
+        p2 = compute_precedent_support(pop, outcomes, feats)
         for r in p2.pop("molecules"):
-            mol_rows[r["mol_id"]].update({f"p2_{k}": v for k, v in r.items() if k not in ("mol_id", "pocket")})
-        report["P2"] = p2
+            mol_rows[r["mol_id"]].update({f"precedent_support_{k}": v for k, v in r.items() if k not in ("mol_id", "pocket")})
+        report["precedent_support"] = p2
     # ---- P3
     p3s = res.metrics["P3"]
     if p3s.status in ("value", "bound") and p3s.sub:
@@ -117,10 +120,10 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
                 with open(os.path.join(out_dir, "real_queries.smi"), "w") as fh:
                     fh.write("\n".join(sorted(q)) + "\n")
                 report["real_queries_pending"] = len(q)
-        p3 = compute_p3(pop, outcomes, cat)
+        p3 = compute_residual_steps(pop, outcomes, cat)
         for r in p3.pop("rows"):
-            mol_rows[r["mol_id"]].update({f"p3_{k}": v for k, v in r.items() if k not in ("mol_id", "pocket")})
-        report["P3"] = p3
+            mol_rows[r["mol_id"]].update({f"residual_steps_{k}": v for k, v in r.items() if k not in ("mol_id", "pocket")})
+        report["residual_steps"] = p3
         # the measured lookup state refines what the resource check could know in advance
         m = res.metrics["P3"]
         if p3.get("needs_on_demand_status") == "bound":
@@ -128,11 +131,11 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
         if p3.get("frontier_status") == "bound" and m.status == "value":
             m.status = "bound"
             m.reason = "some intermediates were never looked up in REAL: residual steps are upper bounds"
-        report["status"]["P3"] = dict(status=m.status, reason=m.reason, sub=m.sub)
+        report["status"]["residual_steps"] = dict(status=m.status, reason=m.reason, sub=m.sub)
         report["banner"] = res.banner
     # ---- P4
     if _status(res, "P4") in ("value", "bound"):
-        report["P4"] = compute_p4(pop, outcomes, scaffold_prior, n_sub)
+        report["scaffold_diversity"] = compute_scaffold_diversity(pop, outcomes, scaffold_prior, n_sub)
 
     with open(os.path.join(out_dir, "report.json"), "w") as fh:
         json.dump(report, fh, indent=1, default=str)
@@ -145,7 +148,7 @@ def evaluate(pop: Population, outcomes: Dict[str, object], res: Resolution, out_
         for r in mol_rows.values():
             w.writerow(r)
     with open(os.path.join(out_dir, "run_manifest.json"), "w") as fh:
-        json.dump(dict(synspeq_version=__version__, python=platform.python_version(), resources=report["resources"], banner=res.banner), fh, indent=1, default=str)
+        json.dump(dict(synspeq_version=__version__, python=platform.python_version(), resources=report["resources"], environment=report["environment"], banner=res.banner), fh, indent=1, default=str)
     return report
 
 
@@ -169,9 +172,11 @@ def _p2_features(reactions, db_path: str, out_dir: str, cache_dir: Optional[str]
     meta = dict(db_sha256=cid, rdkit=rdkit.__version__, key_policy="rxn-key-v1", rxn_insight=ver("rxn-insight"), rxnmapper=ver("rxnmapper"),
                 features="features-v1")
     key = hashlib.sha256(json.dumps(meta, sort_keys=True).encode()).hexdigest()
-    cache = FeatureCache(os.path.join(out_dir, "p2_reaction_features.jsonl"), key)
+    cache = FeatureCache(os.path.join(out_dir, "precedent_support_features.jsonl"), key)
     todo = [r for r in reactions if r not in cache.rows]
     if todo:
+        import sys
+        print(f"precedent support: looking up {len(todo):,} reactions ({len(reactions) - len(todo):,} reused from the cache)", file=sys.stderr, flush=True)
         from .support.engine import Preprocessor, Searcher, reaction_features
         from .support.index import PrecedentIndex
         ic = os.path.join(cache_dir, f"uspto_identity_{cid[:16]}.parquet")

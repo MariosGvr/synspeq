@@ -5,12 +5,12 @@ precedent means support was not retrieved (not that the reaction cannot work); 0
 probability; the reaction database is shared with the planner's training data.
 """
 from __future__ import annotations
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 from ..populations import Population
 from ..support.aggregate import THRESHOLD, molecule_state, route_forward_reactions, route_state, step_state
 
 
-def p2_molecules(pop: Population, outcomes: Dict[str, object], features: Dict[str, dict], threshold: float = THRESHOLD) -> List[dict]:
+def precedent_support_molecules(pop: Population, outcomes: Dict[str, object], features: Dict[str, dict], threshold: float = THRESHOLD) -> List[dict]:
     """One record per distinct molecule that has saved routes. features: forward reaction string -> feature row."""
     out = []
     for m in pop.molecules:
@@ -42,9 +42,9 @@ def required_reactions(pop: Population, outcomes: Dict[str, object]) -> List[str
     return out
 
 
-def compute_p2(pop: Population, outcomes: Dict[str, object], features: Dict[str, dict], n_distinct: Optional[int] = None,
+def compute_precedent_support(pop: Population, outcomes: Dict[str, object], features: Dict[str, dict], n_distinct: Optional[int] = None,
                threshold: float = THRESHOLD) -> dict:
-    mols = p2_molecules(pop, outcomes, features, threshold)
+    mols = precedent_support_molecules(pop, outcomes, features, threshold)
     n_routed = len(mols)
     n_distinct = n_distinct if n_distinct is not None else len(pop.molecules)
     n_direct = sum(1 for m in pop.molecules if outcomes.get(m.mol_id) is not None and outcomes[m.mol_id].outcome == "direct_purchase")

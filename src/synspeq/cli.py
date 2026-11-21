@@ -9,45 +9,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
-import subprocess
 import sys
 from typing import Optional
 from . import __version__
-from .config import load_config, MEASURE_NAMES
+from .config import MEASURE_NAMES
 from .io import read_sdf, read_table
-from .metrics import compute_p1
+from .metrics import compute_findability
+from .environment import rdkit_note
 from .populations import make_population
-from .resources import Store, load_manifest, resolve
-
-
-def _pos_int(v):
-    try:
-        n = int(v)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"{v!r} is not an integer")
-    if n < 1:
-        raise argparse.ArgumentTypeError(f"must be >= 1, got {n}")
-    return n
-
-
-def _nonneg_int(v):
-    n = int(v)
-    if n < 0:
-        raise argparse.ArgumentTypeError(f"must be >= 0, got {n}")
-    return n
-
-
-def _config_and_store(a, extra=None):
-    """Configuration first, then the store: command line > config file > $SYNSPEQ_DATA_DIR > ./.synspeq."""
-    ov = dict(on_missing=getattr(a, "on_missing", None), profile=getattr(a, "profile", None),
-              pillars=a.pillars.split(",") if getattr(a, "pillars", None) else None,
-              resources=a.resources.split(",") if getattr(a, "resources", None) else None,
-              planner_stock=a.planner_stock.split(",") if getattr(a, "planner_stock", None) else None,
-              pocket_field=getattr(a, "pocket_field", None))
-    ov.update(extra or {})
-    cfg = load_config(getattr(a, "config", None), ov)
-    return cfg, Store(a.data_dir or cfg.get("data_dir"))
+from .cli_common import add_measures, config_and_store, nonneg_int, pos_int
+from .cli_data import cmd_data
+from .resources import load_manifest, resolve
 
 
 def _scope_name(scope):
@@ -56,15 +28,15 @@ def _scope_name(scope):
     return MEASURE_NAMES.get(head, head) + dot + rest
 
 
-def _add_measures(parser):
-    parser.add_argument("--measures", dest="pillars", default=None, metavar="MEASURES",
-                        help="comma list of findability, precedent-support, residual-steps, scaffold-diversity (default: all)")
-    parser.add_argument("--pillars", dest="pillars", default=None, help=argparse.SUPPRESS)    # older name of --measures
-
-
 def _print_messages(res):
     for m in res.messages:
         print(f"[{m['level']}] {_scope_name(m['scope'])}: {m['text']}" + (f"\n        fix: {m['fix']}" if m.get("fix") else ""), file=sys.stderr)
+
+
+def _note_rdkit():
+    note = rdkit_note()
+    if note:
+        print(f"NOTE {note}", file=sys.stderr)
 
 
 def _read_any(path: str, pocket_field=None, smiles_col="smiles", name_col="mol_id"):
@@ -76,157 +48,6 @@ def _read_any(path: str, pocket_field=None, smiles_col="smiles", name_col="mol_i
 
 def _fmt_pct(x):
     return "n/a" if x is None else f"{100 * x:.1f}%"
-
-
-def _fetch(r, dest: str, store: Store) -> int:
-    """Stream r.fetch['url'] to dest, verify md5 (and size when given), then register."""
-    import hashlib
-    import urllib.request
-    os.makedirs(dest, exist_ok=True)
-    path = os.path.join(dest, r.fetch["filename"])
-    tmp = path + ".part"
-    h = hashlib.md5()
-    n = last = 0
-    with urllib.request.urlopen(r.fetch["url"]) as resp, open(tmp, "wb") as out:
-        for chunk in iter(lambda: resp.read(1 << 20), b""):
-            out.write(chunk)
-            h.update(chunk)
-            n += len(chunk)
-            if n - last >= 100 << 20:
-                last = n
-                print(f"{n >> 20} MB", flush=True)
-    if r.fetch.get("md5") and h.hexdigest() != r.fetch["md5"]:
-        os.remove(tmp)
-        print(f"checksum mismatch (got {h.hexdigest()}, expected {r.fetch['md5']}); file removed", file=sys.stderr)
-        return 2
-    if r.fetch.get("size") and n != r.fetch["size"]:
-        os.remove(tmp)
-        print(f"size mismatch (got {n}, expected {r.fetch['size']}); file removed", file=sys.stderr)
-        return 2
-    os.replace(tmp, path)
-    e = store.register(r.id, path, fmt=r.format, terms_acknowledged=True, check=r.check or None)
-    print(f"downloaded and registered {r.id} -> {path} (md5 verified)")
-    return 0
-
-
-# ------------------------------------------------------------------ data
-def cmd_data(a) -> int:
-    man = load_manifest()
-    if a.data_cmd == "check":
-        cfg, store = _config_and_store(a)
-    else:
-        store = Store(a.data_dir)
-    sub = a.data_cmd
-    if sub == "list":
-        reg = store.all()
-        print(f"{'id':22} {'role':34} {'default':8} {'access':16} {'fetch':8} registered")
-        for r in man.resources.values():
-            e = reg.get(r.id)
-            print(f"{r.id:22} {','.join(r.roles):34} {'yes' if r.default_enabled else 'no':8} {r.access:16} {'auto' if r.automated else 'guided':8} {e['path'] if e else '-'}")
-        return 0
-    if sub == "info":
-        r = man.resources.get(a.id)
-        if r is None:
-            print(f"unknown resource {a.id!r}; see `synspeq data list`", file=sys.stderr)
-            return 2
-        for k, v in (("name", r.name), ("role", ", ".join(r.roles)), ("provides", ", ".join(r.provides)), ("access", r.access),
-                     ("how to get it", r.get), ("url", r.url), ("format", r.format), ("cite", r.cite), ("terms", r.terms), ("warning", r.warn),
-                     ("if missing", json.dumps(r.if_missing))):
-            if v:
-                print(f"{k:14}: {v}")
-        return 0
-    if sub == "import":
-        r = man.resources.get(a.id)
-        if r is None:
-            print(f"unknown resource {a.id!r}", file=sys.stderr)
-            return 2
-        if r.terms:
-            print(f"Terms for {r.id}: {r.terms}")
-            if r.warn:
-                print(f"Note: {r.warn}")
-        e = store.register(a.id, a.path, fmt=r.format, hash_it=not a.no_hash, snapshot_date=a.snapshot_date, terms_acknowledged=a.accept_terms,
-                           check=r.check or None)
-        v = e["validation"]
-        print(f"registered {a.id} -> {e['path']}  validation: {v.get('status')}" + (f" ({v.get('reason')})" if v.get("reason") else ""))
-        return 0 if v.get("status") in ("ok", "unchecked") else 2
-    if sub == "status":
-        print(json.dumps(store.all(), indent=1))
-        return 0
-    if sub == "check":
-        res = resolve(cfg, man, store, mode=a.mode)
-        print("resources")
-        for s in res.states.values():
-            if s.state != "not_requested":
-                print(f"  {s.id:22} {s.state:10} requested by {s.requested_by:8} {s.path or ''} {('- ' + s.reason) if s.reason else ''}")
-        print("metrics")
-        for p, m in res.metrics.items():
-            print(f"  {p}: {m.status}" + (f"  ({m.reason})" if m.reason else ""))
-            for k, d in m.sub.items():
-                print(f"      {k}: {d['status']}" + (f"  ({d['reason']})" if d.get("reason") else ""))
-        for m in res.messages:
-            print(f"[{m['level']}] {m['scope']}: {m['text']}" + (f"\n        fix: {m['fix']}" if m.get("fix") else ""))
-        return res.exit_code
-    if sub == "build-union":
-        from .resources.union import build_union
-        ids = [x for x in a.resources.split(",") if x]
-        members = {}
-        for rid in ids:
-            e = store.get(rid)
-            path = (a.paths or {}).get(rid) if hasattr(a, "paths") else None
-            if e is None:
-                print(f"{rid} is not registered; `synspeq data import {rid} <path>` first", file=sys.stderr)
-                return 2
-            members[rid] = e["path"]
-        flags = {rid: man.resources[rid].flags for rid in ids if rid in man.resources}
-        out = build_union(members, a.out, flags)
-        store.register("user_union_stock", out["file"], fmt=None, terms_acknowledged=True)
-        print(f"union of {len(ids)} catalogs: {out['n_unique_inchikeys']:,} unique InChIKeys -> {out['file']}")
-        for rid, info in out["members"].items():
-            print(f"  {rid:18} records {info['n_records']:>10,}  unparseable {info['n_unparseable']:>7,}  unique {info['n_unique_keys']:>10,}  new {info['new_keys_added']:>10,}")
-        if out["noncommercial"] or out["sharealike"]:
-            print("  note: the union inherits a non-commercial / share-alike condition from its members")
-        print("  registered as user_union_stock; enable it with --resources user_union_stock")
-        return 0
-    if sub == "download":
-        r = man.resources.get(a.id)
-        if r is None:
-            print(f"unknown resource {a.id!r}", file=sys.stderr)
-            return 2
-        print(f"{r.name}\n  source: {r.url}\n  terms : {r.terms}\n  cite  : {r.cite}")
-        if r.warn:
-            print(f"  note  : {r.warn}")
-        if r.id in ("aizynth_zinc", "aizynth_models"):
-            if not a.accept_terms:
-                print("Re-run with --accept-terms to confirm you have read the terms above.", file=sys.stderr)
-                return 2
-            exe = shutil.which("download_public_data")
-            if exe is None or not a.dest:
-                print("Needs AiZynthFinder installed (`pip install aizynthfinder`) and --dest <dir>; then it runs `download_public_data <dir>`.", file=sys.stderr)
-                return 2
-            os.makedirs(a.dest, exist_ok=True)
-            rc = subprocess.call([exe, a.dest])
-            if rc == 0:
-                # download_public_data fetches models, templates and the stock together: register both resources
-                dest = os.path.abspath(a.dest)
-                stock = os.path.join(dest, "zinc_stock.hdf5")
-                if os.path.exists(os.path.join(dest, "config.yml")):
-                    e = store.register("aizynth_models", dest, fmt=man.resources["aizynth_models"].format, terms_acknowledged=True,
-                                       check=man.resources["aizynth_models"].check or None)
-                    print(f"registered aizynth_models -> {dest}  validation: {e['validation'].get('status')}")
-                if os.path.exists(stock):
-                    e = store.register("aizynth_zinc", stock, fmt=man.resources["aizynth_zinc"].format, terms_acknowledged=True)
-                    print(f"registered aizynth_zinc -> {stock}  validation: {e['validation'].get('status')}")
-                else:
-                    print(f"{stock} not found; register the stock with `synspeq data import aizynth_zinc <file>`", file=sys.stderr)
-            return rc
-        if r.fetch:
-            if not a.accept_terms or not a.dest:
-                print("Re-run with --dest <dir> and --accept-terms (confirms you have read the terms above).", file=sys.stderr)
-                return 2
-            return _fetch(r, a.dest, store)
-        print(f"\nAutomatic download is not implemented for {r.id} in this version. How to get it:\n  {r.get}\nThen: synspeq data import {r.id} <path>")
-        return 0
-    return 2
 
 
 # ------------------------------------------------------------------ validate / replay
@@ -241,12 +62,12 @@ def cmd_validate(a) -> int:
     return 0
 
 
-def cmd_p1(a) -> int:
+def cmd_findability_replay(a) -> int:
     from .pipeline import load_outcomes
     pop = _population(a)
     outcomes = load_outcomes(pop, a.routes_dir)
-    res = compute_p1(pop, outcomes)
-    out = dict(synspeq_version=__version__, population=pop.accounting(), p1=res)
+    res = compute_findability(pop, outcomes)
+    out = dict(synspeq_version=__version__, population=pop.accounting(), findability=res)
     if a.out:
         with open(a.out, "w") as fh:
             json.dump(out, fh, indent=1)
@@ -260,12 +81,13 @@ def cmd_p1(a) -> int:
 def cmd_evaluate(a) -> int:
     from .pipeline import evaluate, load_outcomes
     man = load_manifest()
-    cfg, store = _config_and_store(a)
+    cfg, store = config_and_store(a)
     res = resolve(cfg, man, store, mode="replay")
     _print_messages(res)
     if res.exit_code:
-        print("blocked: nothing was computed (see messages above)", file=sys.stderr)
+        print(f"blocked: nothing was computed (see messages above; resource store {store.root})", file=sys.stderr)
         return res.exit_code
+    _note_rdkit()
     pf = a.pocket_field or cfg.get("pocket_field")
     recs = _read_any(a.input, smiles_col=a.smiles_col, name_col=a.name_col)
     pop = make_population(recs, os.path.basename(a.input), pf, first=a.first, last=a.last)
@@ -281,19 +103,19 @@ def cmd_evaluate(a) -> int:
     rep = evaluate(pop, outcomes, res, a.out, store.all(), real_lookup_dir=a.real_lookup, scaffold_prior=prior, cache_dir=os.path.join(store.root, "cache"))
     for line in res.banner:
         print("NOTE", line)
-    p1 = rep.get("P1")
+    p1 = rep.get("findability")
     if p1:
         print(f"Findability  Solved {_fmt_pct(p1['find'])}  Solved>=1 {_fmt_pct(p1['find_ge1'])}  distinct {p1['n_distinct']}  complete={p1['complete']}")
-    p2 = rep.get("P2")
+    p2 = rep.get("precedent_support")
     if p2:
         print(f"Precedent support  primary route {_fmt_pct(p2['primary']['conditional'])} of routed, any saved route {_fmt_pct(p2['any_saved']['conditional'])}")
-    p3 = rep.get("P3")
+    p3 = rep.get("residual_steps")
     if p3 and p3.get("n_routed"):
         od = p3.get("needs_on_demand")
         od_txt = "n/a (needs both tiers)" if od is None else (("at least " if p3.get("needs_on_demand_status") == "bound" else "") + _fmt_pct(od))
         bnd = " (bound: some intermediates were never looked up in REAL)" if p3.get("frontier_status") == "bound" else ""
         print(f"Residual steps  median {p3['median_residual_steps']}  frontier found {_fmt_pct(p3['frontier_found'])}  on demand {od_txt}{bnd}")
-    p4 = rep.get("P4")
+    p4 = rep.get("scaffold_diversity")
     if p4:
         b = p4["routed"]
         if not b["n_molecules"]:
@@ -360,12 +182,13 @@ def cmd_plan(a) -> int:
     """Plan every distinct molecule with AiZynthFinder (resumable; one chunk per SLURM array task)."""
     from .planners import plan_population
     man = load_manifest()
-    cfg, store = _config_and_store(a, dict(pillars=["P1"]))
+    cfg, store = config_and_store(a, dict(pillars=["P1"]))
     res = resolve(cfg, man, store, mode="plan")
     _print_messages(res)
     if res.exit_code:
-        print("blocked: the planner needs AiZynthFinder models and a stock (see above)", file=sys.stderr)
+        print(f"blocked: the planner needs AiZynthFinder models and a stock (see above; resource store {store.root})", file=sys.stderr)
         return res.exit_code
+    _note_rdkit()
     os.makedirs(a.out, exist_ok=True)
     conf, stock_files = _planner_config(res, man, store, a.out)
     pf = a.pocket_field or cfg.get("pocket_field")
@@ -444,7 +267,7 @@ def cmd_prior(a) -> int:
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="synspeq", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--version", action="version", version=f"synspeq {__version__}")
-    ap.add_argument("--data-dir", default=None, help="resource store (default: $SYNSPEQ_DATA_DIR, else ./.synspeq in the current directory)")
+    ap.add_argument("--data-dir", default=None, help="resource store (default: $SYNSPEQ_DATA_DIR, else ./.synspeq if it exists, else ~/.local/share/synspeq)")
     sp = ap.add_subparsers(dest="cmd", required=True)
 
     d = sp.add_parser("data", help="resources: list, info, import, check, download")
@@ -462,7 +285,7 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("--out", required=True)
     x = ds.add_parser("check")
     x.add_argument("--config"); x.add_argument("--profile", default=None); x.add_argument("--on-missing", default=None, choices=["stop", "skip"])
-    _add_measures(x)
+    add_measures(x)
     x.add_argument("--resources", default=None, help="comma list of resource ids to enable")
     x.add_argument("--planner-stock", default=None)
     x.add_argument("--mode", default="plan", choices=["plan", "replay"])
@@ -474,39 +297,39 @@ def build_parser() -> argparse.ArgumentParser:
         p.add_argument("--smiles-col", default="smiles")
         p.add_argument("--name-col", default="mol_id")
         g = p.add_mutually_exclusive_group()
-        g.add_argument("--first", type=_pos_int, default=None, help="keep the first N rows (per pocket); N >= 1")
-        g.add_argument("--last", type=_pos_int, default=None, help="keep the last N rows (per pocket); N >= 1")
+        g.add_argument("--first", type=pos_int, default=None, help="keep the first N rows (per pocket); N >= 1")
+        g.add_argument("--last", type=pos_int, default=None, help="keep the last N rows (per pocket); N >= 1")
     v = sp.add_parser("validate", help="ingestion audit: valid/invalid records, raw and distinct counts")
     common(v); v.set_defaults(func=cmd_validate)
     r = sp.add_parser("findability-replay", aliases=["p1-replay"], help="findability from cached AiZynthFinder records")
     common(r); r.add_argument("--routes-dir", action="append", required=True); r.add_argument("--out", default=None)
-    r.set_defaults(func=cmd_p1)
+    r.set_defaults(func=cmd_findability_replay)
     e = sp.add_parser("evaluate", help="all assessable measures from cached planner records (replay mode)")
     common(e)
     e.add_argument("--routes-dir", action="append", required=True)
     e.add_argument("--out", required=True)
     e.add_argument("--config"); e.add_argument("--profile", default=None); e.add_argument("--on-missing", default=None, choices=["stop", "skip"])
-    _add_measures(e)
+    add_measures(e)
     e.add_argument("--resources", default=None, help="comma list of resource ids to enable, e.g. enamine_bb,enamine_real")
     e.add_argument("--planner-stock", default=None)
     e.add_argument("--real-lookup", default=None, help="folder with hits.txt / queried.txt from `real-scan` + `real-merge`")
-    e.add_argument("--scaffold-prior", default=None, help="TSV scaffold<TAB>count from a reference catalog sample (P4 reference affinity)")
+    e.add_argument("--scaffold-prior", default=None, help="TSV scaffold<TAB>count from a reference catalog sample (reference affinity of scaffold diversity)")
     e.set_defaults(func=cmd_evaluate)
     pl = sp.add_parser("plan", help="plan with AiZynthFinder (needs the 'planner' extras, models and a stock)")
     common(pl)
     pl.add_argument("--out", required=True)
     pl.add_argument("--config"); pl.add_argument("--on-missing", default=None, choices=["stop", "skip"])
     pl.add_argument("--resources", default=None)
-    pl.add_argument("--workers", type=_pos_int, default=1)
-    pl.add_argument("--chunk", type=_nonneg_int, default=0); pl.add_argument("--n-chunks", type=_pos_int, default=1)
+    pl.add_argument("--workers", type=pos_int, default=1)
+    pl.add_argument("--chunk", type=nonneg_int, default=0); pl.add_argument("--n-chunks", type=pos_int, default=1)
     pl.add_argument("--planner-stock", default=None, help="comma list of resources that form the planner stock (e.g. enamine_bb)")
     pl.set_defaults(func=cmd_plan)
     rn = sp.add_parser("run", help="plan, then evaluate (SDF to report in one command)")
     common(rn)
     rn.add_argument("--out", required=True)
     rn.add_argument("--config"); rn.add_argument("--profile", default=None); rn.add_argument("--on-missing", default=None, choices=["stop", "skip"])
-    _add_measures(rn); rn.add_argument("--resources", default=None)
-    rn.add_argument("--workers", type=_pos_int, default=1)
+    add_measures(rn); rn.add_argument("--resources", default=None)
+    rn.add_argument("--workers", type=pos_int, default=1)
     rn.add_argument("--planner-stock", default=None, help="comma list of resources that form the planner stock (e.g. enamine_bb)")
     rn.add_argument("--real-lookup", default=None); rn.add_argument("--scaffold-prior", default=None)
     rn.set_defaults(func=cmd_run)
@@ -514,7 +337,7 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("dir"); x.set_defaults(func=cmd_report)
     x = sp.add_parser("real-scan", help="one shard of the REAL membership scan for the queries written by evaluate")
     x.add_argument("--queries", required=True); x.add_argument("--real-dir", required=True)
-    x.add_argument("--shard", type=_nonneg_int, default=0); x.add_argument("--n-shards", type=_pos_int, default=1)
+    x.add_argument("--shard", type=nonneg_int, default=0); x.add_argument("--n-shards", type=pos_int, default=1)
     x.add_argument("--smiles-col", default="smiles"); x.add_argument("--out", required=True)
     x.add_argument("--recanonicalise", action="store_true",
                    help="canonicalise every catalog SMILES with this RDKit before matching (slow; use when the catalog was "

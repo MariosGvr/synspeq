@@ -53,11 +53,11 @@ class CLI(unittest.TestCase):
                                 "--measures", "findability,residual-steps,scaffold-diversity", "--resources", "enamine_bb", "--out", out)
         self.assertEqual(rc, 0, text)
         rep = json.load(open(os.path.join(out, "report.json")))
-        self.assertEqual(rep["P1"]["counts"]["routed"], 1)
-        self.assertEqual(rep["P3"]["median_residual_steps"], 1)         # frontier at the stocked intermediate CCCO
-        self.assertEqual(rep["status"]["P3"]["sub"]["real_needed"]["status"], "not_assessed")
-        self.assertEqual(rep["status"]["P2"]["status"], "not_assessed")
-        self.assertIn("P4", rep)
+        self.assertEqual(rep["findability"]["counts"]["routed"], 1)
+        self.assertEqual(rep["residual_steps"]["median_residual_steps"], 1)         # frontier at the stocked intermediate CCCO
+        self.assertEqual(rep["status"]["residual_steps"]["sub"]["real_needed"]["status"], "not_assessed")
+        self.assertEqual(rep["status"]["precedent_support"]["status"], "not_assessed")
+        self.assertIn("scaffold_diversity", rep)
         self.assertTrue(os.path.exists(os.path.join(out, "molecules.csv")))
         html = open(os.path.join(out, "report.html")).read()
         self.assertIn("<h2>Findability</h2>", html)
@@ -68,7 +68,7 @@ class CLI(unittest.TestCase):
     def test_fetch_verifies_checksum_and_registers(self):
         import hashlib
         from types import SimpleNamespace
-        from synspeq.cli import _fetch
+        from synspeq.cli_data import _fetch
         from synspeq.resources import Store
         d = tempfile.mkdtemp()
         src = os.path.join(d, "src.smi")

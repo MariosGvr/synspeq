@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 import random
 from collections import Counter
-from typing import Dict, Iterable, List, Optional, Sequence
+from typing import Dict, Iterable, Optional, Sequence
 from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 

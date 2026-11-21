@@ -19,7 +19,16 @@ ENV = "SYNSPEQ_DATA_DIR"
 
 
 def default_dir() -> str:
-    return os.environ.get(ENV) or os.path.join(os.getcwd(), ".synspeq")   # project-local, like .git
+    """$SYNSPEQ_DATA_DIR, else ./.synspeq when that folder exists (a project-local store, like .git), else a per-user folder
+    that does not depend on the directory a command is run from."""
+    env = os.environ.get(ENV)
+    if env:
+        return env
+    local = os.path.join(os.getcwd(), ".synspeq")
+    if os.path.isdir(local):
+        return local
+    base = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+    return os.path.join(base, "synspeq")
 
 
 # ------------------------------------------------------------------ validation
@@ -160,6 +169,18 @@ def validate(path: str, fmt: Optional[str], check: Optional[dict] = None) -> dic
 # ------------------------------------------------------------------ registry
 from ..locking import file_lock as _locked
 
+_UNWATCHED = (".hdf5", ".h5", ".log", ".part", ".tmp", ".lock")
+
+
+def _watched_names(path: str, check: Optional[dict]) -> list:
+    """The files of a registered directory whose change makes the registration stale. A directory with required files
+    (the planner models) is judged by its model and template files only: a stock or a log file added next to them later
+    must not invalidate the registration."""
+    names = [f for f in sorted(os.listdir(path)) if os.path.isfile(os.path.join(path, f)) and not f.startswith(".")]
+    if check and (check.get("dir_requires") or check.get("dir_requires_ext")):
+        names = [f for f in names if not f.lower().endswith(_UNWATCHED)]
+    return names
+
 
 class Store:
     def __init__(self, root: Optional[str] = None):
@@ -196,10 +217,10 @@ class Store:
             st = os.stat(path)
             entry["snapshot_date"] = snapshot_date or dt.datetime.fromtimestamp(st.st_mtime).date().isoformat()
             if os.path.isdir(path):
-                names = [f for f in sorted(os.listdir(path)) if os.path.isfile(os.path.join(path, f)) and not f.startswith(".")]
+                names = _watched_names(path, check)
                 entry["size_bytes"] = sum(os.path.getsize(os.path.join(path, f)) for f in names)
                 entry["n_files"] = len(names)
-                entry["listing_sha256"] = listing_id(path)
+                entry["listing_sha256"] = listing_id(path, names)
                 entry["mtime_ns"] = max([os.stat(os.path.join(path, f)).st_mtime_ns for f in names] or [0])
             else:
                 entry["size_bytes"] = st.st_size
@@ -213,22 +234,31 @@ class Store:
         return entry
 
     @staticmethod
+    def _directory_changed(p: str, entry: dict, names: list) -> Optional[str]:
+        size = sum(os.path.getsize(os.path.join(p, f)) for f in names)
+        if entry.get("listing_sha256") and listing_id(p, names) != entry["listing_sha256"]:
+            return "directory contents changed since import (file names or sizes differ)"
+        if entry.get("size_bytes") is not None and size != entry["size_bytes"]:
+            return "directory size changed since import"
+        mt = max([os.stat(os.path.join(p, f)).st_mtime_ns for f in names] or [0])
+        if entry.get("mtime_ns") and mt != entry["mtime_ns"]:
+            return "directory files were modified since import"
+        return None
+
+    @staticmethod
     def changed_since_import(entry: dict) -> Optional[str]:
         """Reason string when the registered file no longer matches what was imported, else None."""
         p = entry.get("path")
         if not p or not os.path.exists(p):
             return "path_not_found"
         if os.path.isdir(p):
-            names = [f for f in sorted(os.listdir(p)) if os.path.isfile(os.path.join(p, f)) and not f.startswith(".")]
-            size = sum(os.path.getsize(os.path.join(p, f)) for f in names)
-            if entry.get("listing_sha256") and listing_id(p) != entry["listing_sha256"]:
-                return "directory contents changed since import (file names or sizes differ)"
-            if entry.get("size_bytes") is not None and size != entry["size_bytes"]:
-                return "directory size changed since import"
-            mt = max([os.stat(os.path.join(p, f)).st_mtime_ns for f in names] or [0])
-            if entry.get("mtime_ns") and mt != entry["mtime_ns"]:
-                return "directory files were modified since import"
-            return None
+            # Entries made by earlier versions describe every file of the folder; newer ones only the watched files.
+            every = [f for f in sorted(os.listdir(p)) if os.path.isfile(os.path.join(p, f)) and not f.startswith(".")]
+            watched = _watched_names(p, entry.get("check"))
+            why = Store._directory_changed(p, entry, watched)
+            if why and watched != every and Store._directory_changed(p, entry, every) is None:
+                return None
+            return why
         st = os.stat(p)
         if entry.get("size_bytes") is not None and st.st_size != entry["size_bytes"]:
             return "file size changed since import"

@@ -11,7 +11,7 @@ Views               : 'all' keeps records identical to the query; 'analogue' exc
 """
 from __future__ import annotations
 import math
-from typing import Dict, List, Optional, Sequence
+from typing import List, Optional, Sequence
 
 THRESHOLD = 0.6412
 

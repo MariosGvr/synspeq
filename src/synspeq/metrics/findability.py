@@ -14,7 +14,7 @@ def _share(n, d):
     return None if not d else n / d
 
 
-def compute_p1(pop: Population, outcomes: Dict[str, RouteOutcome]) -> dict:
+def compute_findability(pop: Population, outcomes: Dict[str, RouteOutcome]) -> dict:
     """outcomes: mol_id -> RouteOutcome (missing mol_id counts as pending)."""
     cnt = {o: 0 for o in OUTCOMES}
     raw = {o: 0 for o in OUTCOMES}

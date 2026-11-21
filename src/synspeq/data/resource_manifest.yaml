@@ -35,7 +35,7 @@ resources:
     warn: "Snapshot dates differ between downloads; the report prints the file dates. Vendor-claimed availability, not verified."
     flags: {redistributable: false}
     provides: [planner_stock]
-    if_missing: {not_requested: "ignored", requested_but_absent: "abort (a stock change alters every P1 number; never swap silently)"}
+    if_missing: {not_requested: "ignored", requested_but_absent: "abort (a stock change alters every findability number; never swap silently)"}
   - id: askcos_buyables
     name: "ASKCOS buyables"
     role: planner_stock
@@ -64,7 +64,7 @@ resources:
     flags: {redistributable: false}
     provides: [purchasing_stocked_tier]
     optional_provides: [planner_stock]     # only when listed under planner_stock in config.yaml
-    if_missing: {not_requested: "P3 stocked tier not_assessed; run succeeds", requested_but_absent: "abort, or skip those metrics with on_missing: skip"}
+    if_missing: {not_requested: "residual steps (stocked tier) not_assessed; run succeeds", requested_but_absent: "abort, or skip those metrics with on_missing: skip"}
   - id: emolecules_bb
     name: "eMolecules building blocks (orderbb parent-structure file)"
     role: planner_stock
@@ -150,20 +150,20 @@ resources:
 #   unavailable  requested but missing/invalid and the run was told to continue (--on-missing skip)
 #   blocked      the run refused to start (exit code 2)
 metric_requirements:
-  P1_findability:
+  findability:
     requires_all: [planner_models]
     requires_any: [planner_stock]        # aizynth_zinc is used when the user names no planner stock
     on_unmet: blocked
-  P2_chemical_support:
-    requires_all: [reaction_database, P1_routes]
+  precedent_support:
+    requires_all: [reaction_database, findability_routes]
     on_unmet: {unrequested: not_assessed, requested_but_missing: "blocked; unavailable with --on-missing skip"}
-  P3_deliverability:
+  residual_steps:
     requires_any: [purchasing_stocked_tier, purchasing_on_demand_tier]   # a catalog beyond the planner stock is needed
     sub_metrics:
       residual_steps_and_frontier_found: {requires_any: [purchasing_stocked_tier, purchasing_on_demand_tier]}
       real_needed: {requires_all: [purchasing_on_demand_tier, purchasing_stocked_tier], note: "reported as a bound while REAL lookups are incomplete"}
     on_unmet: not_assessed
-  P4_coverage:
+  scaffold_diversity:
     requires_all: [molecules]
     sub_metrics:
       reference_affinity: {requires_any: [reference_scaffold_profile], on_unmet: not_assessed}   # a prior sampled from REAL parts (`synspeq scaffold-prior`)
@@ -186,7 +186,7 @@ missing_resource_policy:
     - {id: R9, status: partial, rule: "Cached planner records and cached reaction features are reused when their keys match; summaries are always recomputed. There is no `--resume` option: re-running the same command continues."}
     - {id: R10, status: partial, rule: "`build-union` records noncommercial / sharealike / redistributable flags of its members in the union manifest. Reports do not carry them."}
     - {id: R11, status: implemented, rule: "An imported file must contain at least one usable record (parsed with the same readers the pipeline uses) and, for HDF5 and Parquet, the expected dataset or columns; otherwise it is invalid."}
-    - {id: P1, status: planned, rule: "Comparison of reports across stocks (`synspeq compare`), an aggregate-only export, and `--allow-missing`/`--role` options are not implemented."}
+    - {id: N1, status: planned, rule: "Comparison of reports across stocks (`synspeq compare`), an aggregate-only export, and `--allow-missing`/`--role` options are not implemented."}
 use_cases:
   - {id: UC1, case: "SDF only, no config", behaviour: "aizynth_zinc + models + USPTO database are required. If they are not installed the run stops and prints the download commands. residual steps not_assessed (no purchasing catalog); the reference affinity of scaffold diversity not_assessed."}
   - {id: UC2, case: "REAL not mentioned", behaviour: "REAL-dependent metrics not_assessed; with Enamine BB present residual steps use the stocked tier only and say so."}

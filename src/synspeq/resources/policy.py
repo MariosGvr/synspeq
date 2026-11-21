@@ -2,7 +2,7 @@
 
 resolve(config, manifest, store, mode) -> Resolution with
   * a state per resource: ready | partial | not_requested | missing | invalid
-  * a status per measure:  value | bound | not_assessed | unavailable | blocked   (+ sub-metrics for P3, P4)
+  * a status per measure:  value | bound | not_assessed | unavailable | blocked   (+ sub-metrics for residual steps and scaffold diversity)
   * exit_code 2 when anything is blocked, else 0, and the messages/banner a report must print.
 Rules implemented: R1 unspecified is not an error; R2 requested-but-absent is an error with the exact fix (skip
 turns it into 'unavailable'); R3 a user-named stock is never replaced by the default; R4 absence is never zero;
@@ -85,7 +85,7 @@ def _locate(rid: str, cfg: dict, store: Store, fmt: Optional[str], check: Option
 
 
 def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> Resolution:
-    """mode: 'plan' (planner runs: stock + models needed for P1) or 'replay' (cached planner records supplied)."""
+    """mode: 'plan' (planner runs: stock + models needed for findability) or 'replay' (cached planner records supplied)."""
     pillars = set(cfg["pillars"])
     skip = cfg.get("on_missing") == "skip"
     R = manifest.resources
@@ -151,7 +151,7 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
     metrics: Dict[str, MetricStatus] = {}
 
     def note(level, scope, text, fix=None):
-        msgs.append(dict(level=level, scope=scope, text=text, fix=fix))
+        msgs.append(dict(level=level, scope=MEASURE_NAMES.get(scope, scope), text=text, fix=fix))
 
     # ---- P1
     if "P1" not in pillars:
@@ -172,7 +172,7 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
         for s in states.values():
             if s.state == "partial" and STOCK_CAP in prov(s.id):
                 miss.append(f"complete planner stock ({s.id} is only partly available)")
-                note("error", "P1", f"{s.id}: {s.reason}; planning with a partial stock would change every P1 number", s.fix)
+                note("error", "P1", f"{s.id}: {s.reason}; planning with a partial stock would change every findability number", s.fix)
         metrics["P1"] = MetricStatus("P1", "blocked", "missing: " + ", ".join(miss)) if miss else MetricStatus("P1", "value")
 
     # ---- P2
@@ -243,8 +243,8 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
         if skip and not core:
             note("warning", s.id, f"{s.reason}; continuing without it (on_missing: skip). Results exclude it and are not comparable with a run that has it.", s.fix)
         else:
-            hard = True            # a missing planner stock or model set is never skipped: every P1 number would change
-            if not any(m["scope"] == s.id for m in msgs):
+            hard = True            # a missing planner stock or model set is never skipped: every findability number would change
+            if not any(m["scope"] == s.id or m["text"].startswith(f"{s.id}:") for m in msgs):
                 note("error", s.id, f"{s.reason}; the run stops before any computation" + (" (on_missing: skip does not apply to the planner stock or models)" if skip else " (on_missing: stop)"), s.fix)
     code = 2 if hard or any(m.status == "blocked" or any(d["status"] == "blocked" for d in m.sub.values()) for m in metrics.values()) else 0
     stocks = [rid for rid, st in states.items() if st.state == "ready" and STOCK_CAP in prov(rid)]

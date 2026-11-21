@@ -2,7 +2,7 @@
 from __future__ import annotations
 import datetime as dt
 from html import escape as E
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 CSS = """
 :root{--bg:#fff;--ink:#1b1f24;--mute:#5b6570;--line:#d9dee3;--card:#f6f8fa;--warn:#fff4d6;--warnl:#e3b341;--c1:#2f6f9f;--c2:#4c9f70;--c3:#c9a227;--c4:#b5523b;--c5:#8a6fb0;--c6:#9aa5b1}
@@ -64,6 +64,34 @@ def bars(items: List[tuple], width: int = 900, maxv: Optional[float] = None, fmt
     return f'<svg viewBox="0 0 {width} {len(items) * h + 4}" width="100%">{"".join(out)}</svg>'
 
 
+def summary_table(rep: dict) -> str:
+    """One row per measure: the headline number, or why there is none."""
+    st = rep.get("status", {})
+    rows = []
+
+    def row(name, key, headline, detail):
+        s = st.get(key, {})
+        if headline is None:
+            why = s.get("reason") or s.get("status") or "not assessed"
+            rows.append([name, "not assessed" if s.get("status") in (None, "not_assessed") else s.get("status", ""), "", why])
+        else:
+            rows.append([name, "bound" if s.get("status") == "bound" else "value", headline, detail])
+
+    p1, p2, p3, p4 = (rep.get(k) for k in ("findability", "precedent_support", "residual_steps", "scaffold_diversity"))
+    row("Findability", "findability", pct(p1["find"]) if p1 else None,
+        f"Solved; Solved ≥1 {pct(p1['find_ge1'])}; {num(p1['n_distinct'])} distinct molecules" if p1 else "")
+    row("Precedent support", "precedent_support", pct(p2["primary"]["conditional"]) if p2 else None,
+        f"of routed molecules, primary route; any saved route {pct(p2['any_saved']['conditional'])}" if p2 else "")
+    ok3 = bool(p3 and p3.get("n_routed"))
+    row("Residual steps", "residual_steps", num(p3["median_residual_steps"]) if ok3 else None,
+        f"median after purchasing; route has a purchasable intermediate {pct(p3['frontier_found'])}" if ok3 else "")
+    b4 = (p4 or {}).get("routed")
+    row("Scaffold diversity", "scaffold_diversity", (num(b4["n50"]) if b4 and b4.get("n50") is not None else None),
+        "N50 of the routed set; unique scaffold ratio " + ("n/a" if not b4 or b4.get("unique_scaffold_ratio") is None else f"{b4['unique_scaffold_ratio']:.3f}") if b4 else "")
+    return table(["measure", "status", "headline", "what it is"], rows, numeric_from=99)
+
+
+
 def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
     pop = rep.get("population", {})
     parts: List[str] = [f"<h1>{E(title)}</h1>",
@@ -75,6 +103,8 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
         parts.append(f'<div class="banner">{rep["real_queries_pending"]:,} intermediates have not been looked up in REAL yet; residual steps are reported as a bound until '
                      f'<code>synspeq real-scan</code> and <code>real-merge</code> have run.</div>')
 
+    parts.append("<h2>Summary</h2>")
+    parts.append(summary_table(rep))
     # input audit
     parts.append("<h2>Input</h2>")
     parts.append('<div class="cards">' + card(num(pop.get("n_input_records")), "records read") + card(num(pop.get("n_valid_records")), "valid") +
@@ -86,7 +116,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
     note += f"window: {pop['window']}. " if pop.get("window") else ""
     parts.append(f'<p class="note">{E(note)}Identity is the RDKit canonical isomeric SMILES as read; no cleanup is applied. Multi-fragment molecules: {num(pop.get("n_multi_fragment"))}.</p>')
 
-    p1 = rep.get("P1")
+    p1 = rep.get("findability")
     if p1:
         c = p1["counts"]
         n = p1["n_distinct"]
@@ -101,7 +131,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
             parts.append('<p class="note"><b>Incomplete population:</b> pending or errored molecules are shown; the partition does not cover every molecule.</p>')
         parts.append('<p class="note">Unresolved = not found under these settings (a search that ended without a route), not proven unsynthesizable.</p>')
 
-    p2 = rep.get("P2")
+    p2 = rep.get("precedent_support")
     if p2:
         parts.append("<h2>Precedent support (retrieved precedent)</h2>")
         rows = []
@@ -114,7 +144,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
         parts.append(bars([(f"{k} step{'s' if k != '1' else ''} (n={v['n']:,})", 100 * v["primary"], "--c1") for k, v in L.items() if v["primary"] is not None], maxv=100, fmt=lambda v: f"{v:.1f}%"))
         parts.append("<ul>" + "".join(f"<li>{E(x)}</li>" for x in p2.get("notes", [])) + "</ul>")
 
-    p3 = rep.get("P3")
+    p3 = rep.get("residual_steps")
     if p3 and p3.get("n_routed"):
         parts.append("<h2>Residual steps</h2>")
         t = p3["tiers_available"]
@@ -134,7 +164,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
         if d:
             parts.append(bars([(f"{k} residual step{'s' if str(k) != '1' else ''}", v, "--c1") for k, v in sorted(d.items(), key=lambda kv: int(kv[0]))[:12]], fmt=lambda v: f"{int(v):,}"))
 
-    p4 = rep.get("P4")
+    p4 = rep.get("scaffold_diversity")
     if p4:
         parts.append("<h2>Scaffold diversity</h2>")
         rows = []
@@ -154,6 +184,9 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
         parts.append(table(["resource", "state", "snapshot", "size", "sha256"],
                            [[k, v.get("state"), v.get("snapshot_date") or "", num(v.get("size_bytes")) if v.get("size_bytes") else "", (v.get("sha256") or v.get("listing_sha256") or "")[:12]] for k, v in res.items()],
                            numeric_from=99))
+    env = rep.get("environment")
+    if env:
+        parts.append('<p class="note">Software: ' + E(", ".join(f"{k} {v}" for k, v in env.items() if v)) + "</p>")
     parts.append('<h2>How to read this report</h2><ul>'
                  "<li>Retrieved precedent evidence is not experimental feasibility; no qualifying precedent means support was not retrieved.</li>"
                  "<li>0.6412 is a similarity cutoff chosen on a calibration set, not a probability. The reaction database is shared with the planner's training data.</li>"

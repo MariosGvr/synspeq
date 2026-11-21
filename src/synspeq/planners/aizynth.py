@@ -14,7 +14,7 @@ import json
 import multiprocessing as mp
 import os
 import time
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 PLANNER_SETTINGS = dict(max_transforms=10, iteration_limit=500, time_limit=60, return_first=False,
                         exclude_target_from_stock=False, seed=42)

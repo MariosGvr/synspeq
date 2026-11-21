@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from typing import Dict, List, Optional, Set
+from typing import Dict, List
 from .catalogue import RealLookup, catalogue_files, scan_membership
 
 FORMAT = "synspeq-real-scan-v1"

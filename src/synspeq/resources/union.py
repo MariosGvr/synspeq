@@ -21,7 +21,7 @@ def _keys_from_hdf5(path: str) -> Iterator[str]:
 
 
 def member_keys(path: str, smiles_col: str = "smiles") -> Tuple[Set[str], dict]:
-    from ..purchasing.catalogue import _iter_smiles, catalogue_files, is_catalogue_file
+    from ..purchasing.catalogue import _iter_smiles, is_catalogue_file
     keys: Set[str] = set()
     n_in = n_bad = 0
     if os.path.isdir(path):
@@ -49,7 +49,6 @@ def build_union(members: Dict[str, str], out_dir: str, flags: Optional[Dict[str,
     os.makedirs(out_dir, exist_ok=True)
     allk: Set[str] = set()
     per: Dict[str, dict] = {}
-    seen_before: Set[str] = set()
     for rid, path in members.items():
         k, info = member_keys(path)
         info["new_keys_added"] = len(k - allk)

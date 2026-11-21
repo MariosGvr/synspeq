@@ -6,12 +6,12 @@ from statistics import median as _median
 def median(values):
     m = _median(list(values))
     return int(m) if float(m).is_integer() else m
-from typing import Dict, List, Optional
+from typing import Dict, List
 from ..populations import Population
 from ..purchasing import Catalogue, frontier_for_outcome
 
 
-def compute_p3(pop: Population, outcomes: Dict[str, object], cat: Catalogue) -> dict:
+def compute_residual_steps(pop: Population, outcomes: Dict[str, object], cat: Catalogue) -> dict:
     rows: List[dict] = []
     for m in pop.molecules:
         o = outcomes.get(m.mol_id)

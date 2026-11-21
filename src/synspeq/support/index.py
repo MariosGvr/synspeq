@@ -102,6 +102,10 @@ class PrecedentIndex:
             ks = np.array(pd.read_parquet(identity_cache, columns=["key_stereo"]).key_stereo.values, dtype=object)
         else:
             rx = df["REACTION"].tolist()
+            if identity_cache and not limit:
+                import sys
+                print(f"precedent support: building the reaction index for {len(rx):,} database reactions "
+                      "(first run only; it takes a few minutes and is cached for later runs)", file=sys.stderr, flush=True)
             if n_proc > 1:
                 from multiprocessing import Pool
                 chunks = [rx[i:i + 20000] for i in range(0, len(rx), 20000)]

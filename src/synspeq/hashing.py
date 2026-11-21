@@ -59,8 +59,9 @@ def content_id(path: str, cache_file: Optional[str] = None, exclude: Iterable[st
     return hashlib.sha256(json.dumps(parts).encode()).hexdigest()
 
 
-def listing_id(path: str) -> str:
-    """Cheap identity of a large directory (names and sizes only; contents are not read)."""
-    parts = [(f, os.path.getsize(os.path.join(path, f))) for f in sorted(os.listdir(path))
+def listing_id(path: str, names: Optional[Iterable[str]] = None) -> str:
+    """Cheap identity of a large directory (names and sizes only; contents are not read). `names` restricts it to some files."""
+    keep = sorted(names) if names is not None else sorted(os.listdir(path))
+    parts = [(f, os.path.getsize(os.path.join(path, f))) for f in keep
              if os.path.isfile(os.path.join(path, f)) and not f.startswith(".")]
     return hashlib.sha256(json.dumps(parts).encode()).hexdigest()

@@ -1,13 +1,13 @@
 """Regression tests. Each test reproduces a concrete failing input and asserts the value written down BEFORE looking at the
 code's answer (hand-computed or taken from the stated rule)."""
-import gzip, json, multiprocessing, os, re, shlex, shutil, tempfile, unittest
+import json, multiprocessing, os, re, shlex, shutil, tempfile, unittest
 from unittest import mock
 from rdkit import Chem
 from synspeq.cli import build_parser, main
 from synspeq.config import load_config
 from synspeq.coverage import cosine_to_prior, n50_csr, scaffold_prior, subsample_n50
-from synspeq.io import read_sdf, read_table
-from synspeq.metrics import compute_p1, compute_p3, compute_p4
+from synspeq.io import read_sdf
+from synspeq.metrics import compute_findability, compute_residual_steps, compute_scaffold_diversity
 from synspeq.pipeline import load_outcomes
 from synspeq.populations import make_population
 from synspeq.purchasing import Catalogue, RealLookup, load_building_blocks
@@ -62,7 +62,7 @@ class PlannerRecordBinding(Tmp):
         self.assertEqual(by["CCO"].outcome, "direct_purchase")
         self.assertEqual(by["CCN"].outcome, "execution_error")           # the record describes another molecule
         self.assertIn("another molecule", by["CCN"].error)
-        r = compute_p1(pop, out)
+        r = compute_findability(pop, out)
         self.assertFalse(r["complete"])
         self.assertAlmostEqual(r["find"], 0.5)
 
@@ -201,7 +201,7 @@ class Workflows(Tmp):
             self.assertIn(line.split("  on demand")[0], readme)       # and the README shows the same numbers
         rep = json.load(open(self.p("out", "report.json")))
         self.assertEqual(rep["population"]["n_invalid_records"], 1)
-        self.assertEqual(rep["P1"]["counts"]["direct_purchase"], 1)
+        self.assertEqual(rep["findability"]["counts"]["direct_purchase"], 1)
 
 
 class RecordSchema(Tmp):
@@ -474,11 +474,11 @@ class Metrics(Tmp):
         t = mol("CCCCO", [rxn(mol("CCCO", stock=False, children=[rxn(mol("CCO", stock=True), mol("CO", stock=True))]), mol("CC", stock=True))])
         pop = make_population(read_sdf(sdf), "t")
         o = {pop.molecules[0].mol_id: classify_planner_json({"smiles": "CCCCO", "solvable": True, "n_steps": 2, "trees": [t]})}
-        r = compute_p3(pop, o, Catalogue({"CCCO"}, None))
+        r = compute_residual_steps(pop, o, Catalogue({"CCCO"}, None))
         self.assertIsNone(r["needs_on_demand"])
         self.assertEqual(r["needs_on_demand_status"], "not_assessed")
         self.assertEqual(r["median_residual_steps"], 1)
-        r = compute_p3(pop, o, Catalogue({"CCCO"}, RealLookup()))
+        r = compute_residual_steps(pop, o, Catalogue({"CCCO"}, RealLookup()))
         self.assertEqual(r["needs_on_demand_status"], "bound")       # nothing was looked up in REAL yet
 
     def test_prior_and_query_use_the_same_scaffold_policy(self):
@@ -496,7 +496,7 @@ class Metrics(Tmp):
         sdf = self.p("m.sdf"); write_sdf(sdf, [("a", "CCO", {}), ("b", "CCN", {})])
         pop = make_population(read_sdf(sdf), "t")
         outs = {m.mol_id: classify_planner_json(direct(m.identity)) for m in pop.molecules}
-        b = compute_p4(pop, outs)["all_distinct"]
+        b = compute_scaffold_diversity(pop, outs)["all_distinct"]
         self.assertIsNone(b["n50"])
         self.assertIsNone(b["csr_auc"])
         self.assertEqual(b["n_acyclic"], 2)

@@ -27,7 +27,7 @@ def _block(mols, prior: Optional[dict], n_sub: int, pocket_min: int = 20):
     )
 
 
-def compute_p4(pop: Population, outcomes: Dict[str, object], prior: Optional[dict] = None, n_sub: int = 3000) -> dict:
+def compute_scaffold_diversity(pop: Population, outcomes: Dict[str, object], prior: Optional[dict] = None, n_sub: int = 3000) -> dict:
     routed = [m for m in pop.molecules if outcomes.get(m.mol_id) is not None and outcomes[m.mol_id].outcome in ("routed", "found_no_saved_route")]
     return dict(label=pop.label,
                 routed=_block(routed, prior, n_sub),
