@@ -269,6 +269,17 @@ class Resources(Tmp):
         self.assertEqual(errors, [])
         self.assertEqual(sorted(Store(root).all()), ["one", "two"])
 
+    def test_hdf5_stock_row_count_fixed_and_table_format(self):
+        import pandas as pd
+        df = pd.DataFrame({"inchi_key": ["LFQSCWFLJHTTHZ-UHFFFAOYSA-N", "BSYNRYMUTXBXSQ-UHFFFAOYSA-N"]})
+        st = Store(self.p("s"))
+        for name, kw in (("fixed.hdf5", {}), ("table.hdf5", {"format": "table"})):    # the Union2026 stock is table format
+            df.to_hdf(self.p(name), key="table", mode="w", **kw)
+            v = st.register(name.split(".")[0], self.p(name), fmt="aizynthfinder_hdf5")["validation"]
+            self.assertEqual((v["status"], v["n_records"]), ("ok", 2), name)
+        df.iloc[:0].to_hdf(self.p("empty.hdf5"), key="table", mode="w", format="table")
+        self.assertEqual(st.register("empty", self.p("empty.hdf5"), fmt="aizynthfinder_hdf5")["validation"]["status"], "invalid")
+
     def test_unusable_catalogues_are_invalid(self):
         os.makedirs(self.p("dir"))
         self.write("dir/README.txt", "This directory contains the catalogue.\nSee the website.\n")

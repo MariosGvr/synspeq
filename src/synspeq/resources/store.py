@@ -62,7 +62,10 @@ def _validate_file(path: str, fmt: Optional[str], check: dict) -> dict:
                     if "/table" not in hs.keys():
                         return {"status": "invalid", "reason": "no 'table' dataset in the HDF5 file"}
                     node = hs.get_node("table/axis1")          # row index of a fixed-format frame
-                    nrows = int(node.shape[0]) if node is not None else 0
+                    if node is not None:
+                        nrows = int(node.shape[0])
+                    else:                                      # table-format frame (no axis1 node), e.g. the Union2026 stock
+                        nrows = int(getattr(hs.get_storer("table"), "nrows", 0) or 0)
                 head = pd.read_hdf(path, key="table", start=0, stop=5)
                 if "inchi_key" not in head.columns:
                     return {"status": "invalid", "reason": f"no 'inchi_key' column (columns: {list(head.columns)})"}
