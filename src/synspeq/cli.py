@@ -2,8 +2,8 @@
 
   synspeq data list|info|import|check|download|status
   synspeq validate <molecules.sdf|.csv|.smi> [--pocket-field F] [--first N | --last N]
-  synspeq p1-replay <molecules> --routes-dir DIR [--routes-dir DIR2 ...]   (cached AiZynthFinder records: <mol_id>.json or <title>.json)
-Exit codes: 0 ok; 2 a requested/core resource is missing, an input is unusable, or a metric is blocked (nothing was computed).
+  synspeq findability-replay <molecules> --routes-dir DIR [--routes-dir DIR2 ...]   (cached AiZynthFinder records: <mol_id>.json or <title>.json)
+Exit codes: 0 ok; 2 a requested/core resource is missing, an input is unusable, or a measure is blocked (nothing was computed).
 """
 from __future__ import annotations
 import argparse
@@ -478,7 +478,7 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--last", type=_pos_int, default=None, help="keep the last N rows (per pocket); N >= 1")
     v = sp.add_parser("validate", help="ingestion audit: valid/invalid records, raw and distinct counts")
     common(v); v.set_defaults(func=cmd_validate)
-    r = sp.add_parser("p1-replay", help="findability from cached AiZynthFinder records")
+    r = sp.add_parser("findability-replay", aliases=["p1-replay"], help="findability from cached AiZynthFinder records")
     common(r); r.add_argument("--routes-dir", action="append", required=True); r.add_argument("--out", default=None)
     r.set_defaults(func=cmd_p1)
     e = sp.add_parser("evaluate", help="all assessable measures from cached planner records (replay mode)")

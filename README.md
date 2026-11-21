@@ -155,6 +155,7 @@ purchasing catalog. The scaffold diversity measures require no additional catalo
 | `synspeq run` | plan with AiZynthFinder, then evaluate (SDF → report) |
 | `synspeq plan` | planning only; resumable, splits into chunks for SLURM arrays |
 | `synspeq evaluate` | all assessable measures from cached planner records |
+| `synspeq findability-replay` | findability only, from cached planner records |
 | `synspeq validate` | input audit: valid / invalid, raw and distinct counts |
 | `synspeq data list \| info \| import \| check \| download \| build-union` | manage resources; `build-union` merges your catalogs into one planner stock |
 | `synspeq real-scan` / `real-merge` | one-pass REAL lookup of route intermediates |

@@ -9,7 +9,7 @@ class CLI(unittest.TestCase):
             rc = main(list(argv))
         return rc, buf.getvalue()
 
-    def test_validate_and_p1_replay(self):
+    def test_validate_and_findability_replay(self):
         d = tempfile.mkdtemp()
         with open(os.path.join(d, "m.csv"), "w") as fh:
             fh.write("mol_id,smiles,pocket_id\na,CCO,P\nb,OCC,P\nc,CCN,P\n")
@@ -19,13 +19,16 @@ class CLI(unittest.TestCase):
         rc, out = self.run_cli("validate", os.path.join(d, "m.csv"), "--pocket-field", "pocket_id")
         self.assertEqual(rc, 0)
         self.assertEqual(json.loads(out)["n_distinct_molecules"], 2)
-        rc, out = self.run_cli("p1-replay", os.path.join(d, "m.csv"), "--pocket-field", "pocket_id", "--routes-dir", os.path.join(d, "r"))
+        rc, out = self.run_cli("findability-replay", os.path.join(d, "m.csv"), "--pocket-field", "pocket_id", "--routes-dir", os.path.join(d, "r"))
         self.assertEqual(rc, 0)
         self.assertIn("direct 1", out)
         self.assertIn("pending 1", out)             # record c has no planner record yet: pending, not unresolved
         self.assertIn("complete=False", out)
+        rc, out = self.run_cli("p1-replay", os.path.join(d, "m.csv"), "--pocket-field", "pocket_id", "--routes-dir", os.path.join(d, "r"))
+        self.assertEqual(rc, 0)                     # the older command name still works
+        self.assertIn("direct 1", out)
 
-    def test_evaluate_p1_p3_p4_with_missing_real_not_assessed_parts(self):
+    def test_evaluate_findability_residual_steps_scaffold_diversity_with_missing_real_not_assessed_parts(self):
         d = tempfile.mkdtemp()
         with open(os.path.join(d, "m.csv"), "w") as fh:
             fh.write("mol_id,smiles,pocket_id\na,CCCCO,P\nb,c1ccccc1CCO,P\nc,CCN,P\n")
