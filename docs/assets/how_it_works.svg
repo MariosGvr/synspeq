@@ -1,215 +1,138 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1000" height="815" viewBox="0 0 1000 815">
-  <title>SYNSPEQ pipeline in detail</title>
-  <desc>Molecules are ingested, reduced to distinct molecules, planned with AiZynthFinder and saved as routes. Each molecule ends in one outcome. Four measures, findability, precedent support, residual steps and scaffold diversity, are computed with their denominators and written to a report.</desc>
-  <rect id="background" x="0" y="0" width="1000" height="815" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="920" height="617" viewBox="0 0 920 617">
+  <title>SYNSPEQ pipeline</title>
+  <desc>Molecules are ingested, reduced to distinct molecules, planned with AiZynthFinder and saved as routes. Each molecule is purchasable, routed or without a route. Four measures, findability, precedent support, residual steps and scaffold diversity, are written to a report.</desc>
+  <rect id="background" x="0" y="0" width="920" height="617" fill="#ffffff"/>
   <g id="layer-boxes">
-    <rect id="stage-1-box" x="14.0" y="14.0" width="176.8" height="134.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="stage-2-box" x="212.8" y="14.0" width="176.8" height="134.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="stage-3-box" x="411.6" y="14.0" width="176.8" height="134.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="stage-4-box" x="610.4" y="14.0" width="176.8" height="134.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="stage-5-box" x="809.2" y="14.0" width="176.8" height="134.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="outcome-1-box" x="14.0" y="225.0" width="184.8" height="62.0" rx="6" fill="#abddde" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="outcome-2-box" x="210.8" y="225.0" width="184.8" height="62.0" rx="6" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="outcome-3-box" x="407.6" y="225.0" width="184.8" height="62.0" rx="6" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="outcome-4-box" x="604.4" y="225.0" width="184.8" height="62.0" rx="6" fill="#ffffff" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="outcome-5-box" x="801.2" y="225.0" width="184.8" height="62.0" rx="6" fill="#ffffff" stroke="#2a211a" stroke-width="0.9"/>
-    <rect id="card-1-box" x="14.0" y="339.0" width="229.5" height="347.7" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
-    <rect id="card-1-step-1" x="24.0" y="434.0" width="209.5" height="22.6" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-1-step-2" x="24.0" y="468.7" width="209.5" height="37.3" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-1-step-3" x="24.0" y="518.0" width="209.5" height="22.6" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-1-needs" x="24.0" y="657.7" width="209.5" height="22.4" rx="11.180800000000001" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-2-box" x="261.5" y="339.0" width="229.5" height="347.7" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
-    <rect id="card-2-step-1" x="271.5" y="449.8" width="209.5" height="37.3" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-2-step-2" x="271.5" y="499.1" width="209.5" height="37.3" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-2-step-3" x="271.5" y="548.4" width="209.5" height="37.3" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-2-needs" x="271.5" y="657.7" width="209.5" height="22.4" rx="11.180800000000001" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-3-box" x="509.0" y="339.0" width="229.5" height="347.7" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
-    <rect id="card-3-step-1" x="519.0" y="449.8" width="209.5" height="22.6" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-3-step-2" x="519.0" y="484.5" width="209.5" height="51.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-3-step-3" x="519.0" y="548.4" width="209.5" height="22.6" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-3-needs" x="519.0" y="657.7" width="209.5" height="22.4" rx="11.180800000000001" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-4-box" x="756.5" y="339.0" width="229.5" height="347.7" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
-    <rect id="card-4-step-1" x="766.5" y="434.0" width="209.5" height="37.3" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-4-step-2" x="766.5" y="483.3" width="209.5" height="37.3" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-4-step-3" x="766.5" y="532.6" width="209.5" height="37.3" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="card-4-needs" x="766.5" y="657.7" width="209.5" height="22.4" rx="11.180800000000001" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
-    <rect id="outputs-box" x="14.0" y="716.7" width="972.0" height="74.0" rx="7" fill="#abddde" stroke="#2a211a" stroke-width="1.0"/>
+    <rect id="stage-1-box" x="14.0" y="14.0" width="162.4" height="74.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="stage-2-box" x="196.4" y="14.0" width="162.4" height="74.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="stage-3-box" x="378.8" y="14.0" width="162.4" height="74.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="stage-4-box" x="561.2" y="14.0" width="162.4" height="74.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="stage-5-box" x="743.6" y="14.0" width="162.4" height="74.0" rx="6" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="outcome-1-box" x="138.0" y="132.0" width="200.0" height="40.0" rx="8" fill="#abddde" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="outcome-2-box" x="360.0" y="132.0" width="200.0" height="40.0" rx="8" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="outcome-3-box" x="582.0" y="132.0" width="200.0" height="40.0" rx="8" fill="#ffffff" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="card-1-box" x="14.0" y="222.0" width="211.0" height="293.4" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
+    <rect id="card-1-step-1" x="26.0" y="333.3" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-1-step-2" x="26.0" y="370.2" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-1-needs" x="32.0" y="485.4" width="175.0" height="23.7" rx="11.833599999999999" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-2-box" x="241.0" y="222.0" width="211.0" height="293.4" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
+    <rect id="card-2-step-1" x="253.0" y="314.9" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-2-step-2" x="253.0" y="351.8" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-2-step-3" x="253.0" y="388.7" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-2-needs" x="259.0" y="485.4" width="175.0" height="23.7" rx="11.833599999999999" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-3-box" x="468.0" y="222.0" width="211.0" height="293.4" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
+    <rect id="card-3-step-1" x="480.0" y="314.9" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-3-step-2" x="480.0" y="351.8" width="187.0" height="42.8" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-3-step-3" x="480.0" y="405.6" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-3-needs" x="486.0" y="485.4" width="175.0" height="23.7" rx="11.833599999999999" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-4-box" x="695.0" y="222.0" width="211.0" height="293.4" rx="7" fill="#ffffff" stroke="#2a211a" stroke-width="1.0"/>
+    <rect id="card-4-step-1" x="707.0" y="296.4" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-4-step-2" x="707.0" y="333.3" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-4-step-3" x="707.0" y="370.2" width="187.0" height="25.9" rx="5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="card-4-needs" x="713.0" y="485.4" width="175.0" height="23.7" rx="11.833599999999999" fill="#eccbae" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="outputs-box" x="14.0" y="547.4" width="892.0" height="56.0" rx="7" fill="#abddde" stroke="#2a211a" stroke-width="1.0"/>
   </g>
   <g id="layer-arrows">
-    <path id="stage-arrow-1" d="M192.8,81.0 L210.8,81.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="stage-arrow-1-head" points="210.8,81.0 204.3,77.8 204.3,84.2" fill="#2a211a"/>
-    <path id="stage-arrow-2" d="M391.6,81.0 L409.6,81.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="stage-arrow-2-head" points="409.6,81.0 403.1,77.8 403.1,84.2" fill="#2a211a"/>
-    <path id="stage-arrow-3" d="M590.4,81.0 L608.4,81.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="stage-arrow-3-head" points="608.4,81.0 601.9,77.8 601.9,84.2" fill="#2a211a"/>
-    <path id="stage-arrow-4" d="M789.2,81.0 L807.2,81.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="stage-arrow-4-head" points="807.2,81.0 800.7,77.8 800.7,84.2" fill="#2a211a"/>
-    <line id="cmd-validate-bar" x1="14.0" y1="157.0" x2="588.4" y2="157.0" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
-    <line id="cmd-validate-l" x1="14.0" y1="153.0" x2="14.0" y2="157.0" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
-    <line id="cmd-validate-r" x1="588.4" y1="153.0" x2="588.4" y2="157.0" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
-    <line id="cmd-plan-bar" x1="610.4" y1="157.0" x2="986.0" y2="157.0" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
-    <line id="cmd-plan-l" x1="610.4" y1="153.0" x2="610.4" y2="157.0" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
-    <line id="cmd-plan-r" x1="986.0" y1="153.0" x2="986.0" y2="157.0" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
-    <line id="saved-down" x1="897.6" y1="157.0" x2="897.6" y2="214.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="outcome-bus" x1="106.4" y1="214.0" x2="893.6" y2="214.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <path id="outcome-1-in" d="M106.4,214.0 L106.4,224.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="outcome-1-in-head" points="106.4,224.0 109.6,217.5 103.2,217.5" fill="#2a211a"/>
-    <line id="outcome-1-out" x1="106.4" y1="287.0" x2="106.4" y2="299.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <path id="outcome-2-in" d="M303.2,214.0 L303.2,224.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="outcome-2-in-head" points="303.2,224.0 306.4,217.5 300.0,217.5" fill="#2a211a"/>
-    <line id="outcome-2-out" x1="303.2" y1="287.0" x2="303.2" y2="299.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <path id="outcome-3-in" d="M500.0,214.0 L500.0,224.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="outcome-3-in-head" points="500.0,224.0 503.2,217.5 496.8,217.5" fill="#2a211a"/>
-    <line id="outcome-3-out" x1="500.0" y1="287.0" x2="500.0" y2="299.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <path id="outcome-4-in" d="M696.8,214.0 L696.8,224.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="outcome-4-in-head" points="696.8,224.0 700.0,217.5 693.6,217.5" fill="#2a211a"/>
-    <line id="outcome-4-out" x1="696.8" y1="287.0" x2="696.8" y2="299.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <path id="outcome-5-in" d="M893.6,214.0 L893.6,224.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="outcome-5-in-head" points="893.6,224.0 896.8,217.5 890.4,217.5" fill="#2a211a"/>
-    <line id="outcome-5-out" x1="893.6" y1="287.0" x2="893.6" y2="299.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="outcome-out-bus" x1="106.4" y1="299.0" x2="893.6" y2="299.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <path id="card-1-step-arrow-1" d="M128.8,457.7 L128.8,467.7" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-1-step-arrow-1-head" points="128.8,467.7 131.9,461.2 125.5,461.2" fill="#2a211a"/>
-    <path id="card-1-step-arrow-2" d="M128.8,507.0 L128.8,517.0" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-1-step-arrow-2-head" points="128.8,517.0 131.9,510.5 125.5,510.5" fill="#2a211a"/>
-    <path id="to-card-1" d="M128.8,319.0 L128.8,338.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="to-card-1-head" points="128.8,338.0 131.9,331.5 125.5,331.5" fill="#2a211a"/>
-    <path id="card-2-step-arrow-1" d="M376.2,488.1 L376.2,498.1" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-2-step-arrow-1-head" points="376.2,498.1 379.4,491.6 373.1,491.6" fill="#2a211a"/>
-    <path id="card-2-step-arrow-2" d="M376.2,537.4 L376.2,547.4" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-2-step-arrow-2-head" points="376.2,547.4 379.4,540.9 373.1,540.9" fill="#2a211a"/>
-    <path id="to-card-2" d="M376.2,319.0 L376.2,338.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="to-card-2-head" points="376.2,338.0 379.4,331.5 373.1,331.5" fill="#2a211a"/>
-    <path id="card-3-step-arrow-1" d="M623.8,473.5 L623.8,483.5" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-3-step-arrow-1-head" points="623.8,483.5 627.0,477.0 620.5,477.0" fill="#2a211a"/>
-    <path id="card-3-step-arrow-2" d="M623.8,537.4 L623.8,547.4" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-3-step-arrow-2-head" points="623.8,547.4 627.0,540.9 620.5,540.9" fill="#2a211a"/>
-    <path id="to-card-3" d="M623.8,319.0 L623.8,338.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="to-card-3-head" points="623.8,338.0 627.0,331.5 620.5,331.5" fill="#2a211a"/>
-    <path id="card-4-step-arrow-1" d="M871.2,472.3 L871.2,482.3" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-4-step-arrow-1-head" points="871.2,482.3 874.5,475.8 868.0,475.8" fill="#2a211a"/>
-    <path id="card-4-step-arrow-2" d="M871.2,521.6 L871.2,531.6" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
-    <polygon id="card-4-step-arrow-2-head" points="871.2,531.6 874.5,525.1 868.0,525.1" fill="#2a211a"/>
-    <path id="to-card-4" d="M871.2,319.0 L871.2,338.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="to-card-4-head" points="871.2,338.0 874.5,331.5 868.0,331.5" fill="#2a211a"/>
-    <line id="measure-bus" x1="128.8" y1="319.0" x2="871.2" y2="319.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="measure-bus-up" x1="500.0" y1="299.0" x2="500.0" y2="319.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="outputs-bus" x1="128.8" y1="700.7" x2="871.2" y2="700.7" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="to-outputs-1" x1="128.8" y1="686.7" x2="128.8" y2="700.7" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="to-outputs-2" x1="376.2" y1="686.7" x2="376.2" y2="700.7" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="to-outputs-3" x1="623.8" y1="686.7" x2="623.8" y2="700.7" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <line id="to-outputs-4" x1="871.2" y1="686.7" x2="871.2" y2="700.7" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
-    <path id="outputs-in" d="M500.0,700.7 L500.0,715.7" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
-    <polygon id="outputs-in-head" points="500.0,715.7 503.2,709.2 496.8,709.2" fill="#2a211a"/>
+    <path id="stage-arrow-1" d="M178.4,51.0 L194.4,51.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="stage-arrow-1-head" points="194.4,51.0 187.9,47.8 187.9,54.2" fill="#2a211a"/>
+    <path id="stage-arrow-2" d="M360.8,51.0 L376.8,51.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="stage-arrow-2-head" points="376.8,51.0 370.3,47.8 370.3,54.2" fill="#2a211a"/>
+    <path id="stage-arrow-3" d="M543.2,51.0 L559.2,51.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="stage-arrow-3-head" points="559.2,51.0 552.7,47.8 552.7,54.2" fill="#2a211a"/>
+    <path id="stage-arrow-4" d="M725.6,51.0 L741.6,51.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="stage-arrow-4-head" points="741.6,51.0 735.1,47.8 735.1,54.2" fill="#2a211a"/>
+    <line id="saved-down" x1="824.8" y1="88.0" x2="824.8" y2="118.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="outcome-bus" x1="238.0" y1="118.0" x2="824.8" y2="118.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <path id="outcome-1-in" d="M238.0,118.0 L238.0,131.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="outcome-1-in-head" points="238.0,131.0 241.2,124.5 234.8,124.5" fill="#2a211a"/>
+    <line id="outcome-1-out" x1="238.0" y1="172.0" x2="238.0" y2="184.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <path id="outcome-2-in" d="M460.0,118.0 L460.0,131.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="outcome-2-in-head" points="460.0,131.0 463.2,124.5 456.8,124.5" fill="#2a211a"/>
+    <line id="outcome-2-out" x1="460.0" y1="172.0" x2="460.0" y2="184.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <path id="outcome-3-in" d="M682.0,118.0 L682.0,131.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="outcome-3-in-head" points="682.0,131.0 685.2,124.5 678.8,124.5" fill="#2a211a"/>
+    <line id="outcome-3-out" x1="682.0" y1="172.0" x2="682.0" y2="184.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="outcome-out-bus" x1="238.0" y1="184.0" x2="682.0" y2="184.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <path id="card-1-step-arrow-1" d="M119.5,360.2 L119.5,369.2" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
+    <polygon id="card-1-step-arrow-1-head" points="119.5,369.2 122.7,362.7 116.3,362.7" fill="#2a211a"/>
+    <path id="to-card-1" d="M119.5,204.0 L119.5,221.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="to-card-1-head" points="119.5,221.0 122.7,214.5 116.3,214.5" fill="#2a211a"/>
+    <path id="card-2-step-arrow-1" d="M346.5,341.8 L346.5,350.8" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
+    <polygon id="card-2-step-arrow-1-head" points="346.5,350.8 349.7,344.3 343.3,344.3" fill="#2a211a"/>
+    <path id="card-2-step-arrow-2" d="M346.5,378.7 L346.5,387.7" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
+    <polygon id="card-2-step-arrow-2-head" points="346.5,387.7 349.7,381.2 343.3,381.2" fill="#2a211a"/>
+    <path id="to-card-2" d="M346.5,204.0 L346.5,221.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="to-card-2-head" points="346.5,221.0 349.7,214.5 343.3,214.5" fill="#2a211a"/>
+    <path id="card-3-step-arrow-1" d="M573.5,341.8 L573.5,350.8" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
+    <polygon id="card-3-step-arrow-1-head" points="573.5,350.8 576.7,344.3 570.3,344.3" fill="#2a211a"/>
+    <path id="card-3-step-arrow-2" d="M573.5,395.6 L573.5,404.6" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
+    <polygon id="card-3-step-arrow-2-head" points="573.5,404.6 576.7,398.1 570.3,398.1" fill="#2a211a"/>
+    <path id="to-card-3" d="M573.5,204.0 L573.5,221.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="to-card-3-head" points="573.5,221.0 576.7,214.5 570.3,214.5" fill="#2a211a"/>
+    <path id="card-4-step-arrow-1" d="M800.5,323.3 L800.5,332.3" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
+    <polygon id="card-4-step-arrow-1-head" points="800.5,332.3 803.7,325.8 797.3,325.8" fill="#2a211a"/>
+    <path id="card-4-step-arrow-2" d="M800.5,360.2 L800.5,369.2" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/>
+    <polygon id="card-4-step-arrow-2-head" points="800.5,369.2 803.7,362.7 797.3,362.7" fill="#2a211a"/>
+    <path id="to-card-4" d="M800.5,204.0 L800.5,221.0" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="to-card-4-head" points="800.5,221.0 803.7,214.5 797.3,214.5" fill="#2a211a"/>
+    <line id="measure-bus" x1="119.5" y1="204.0" x2="800.5" y2="204.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="measure-bus-up" x1="460.0" y1="184.0" x2="460.0" y2="204.0" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="outputs-bus" x1="119.5" y1="530.4" x2="800.5" y2="530.4" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="to-outputs-1" x1="119.5" y1="515.4" x2="119.5" y2="530.4" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="to-outputs-2" x1="346.5" y1="515.4" x2="346.5" y2="530.4" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="to-outputs-3" x1="573.5" y1="515.4" x2="573.5" y2="530.4" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <line id="to-outputs-4" x1="800.5" y1="515.4" x2="800.5" y2="530.4" stroke="#2a211a" stroke-width="1.0" stroke-linecap="round"/>
+    <path id="outputs-in" d="M460.0,530.4 L460.0,546.4" fill="none" stroke="#2a211a" stroke-width="1.0" stroke-linejoin="round"/>
+    <polygon id="outputs-in-head" points="460.0,546.4 463.2,539.9 456.8,539.9" fill="#2a211a"/>
   </g>
   <g id="layer-text">
-    <text id="stage-1-title" x="102.4" y="35.0" font-family="Helvetica, Arial, sans-serif" font-size="14.85" font-weight="bold" fill="#2a211a" text-anchor="middle">Input molecules</text>
-    <text id="stage-1-d1-l1" x="102.4" y="54.0" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">SDF, CSV or SMILES</text>
-    <text id="stage-1-d2-l1" x="102.4" y="73.2" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">an optional property names</text>
-    <text id="stage-1-d2-l2" x="102.4" y="88.4" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">the target pocket</text>
-    <text id="stage-2-title" x="301.2" y="35.0" font-family="Helvetica, Arial, sans-serif" font-size="14.85" font-weight="bold" fill="#2a211a" text-anchor="middle">Ingest</text>
-    <text id="stage-2-d1-l1" x="301.2" y="54.0" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">identity is the RDKit canonical</text>
-    <text id="stage-2-d1-l2" x="301.2" y="69.2" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">isomeric SMILES, as read</text>
-    <text id="stage-2-d2-l1" x="301.2" y="88.4" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">invalid records are listed with</text>
-    <text id="stage-2-d2-l2" x="301.2" y="103.6" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">a reason</text>
-    <text id="stage-3-title" x="500.0" y="35.0" font-family="Helvetica, Arial, sans-serif" font-size="14.85" font-weight="bold" fill="#2a211a" text-anchor="middle">Distinct molecules</text>
-    <text id="stage-3-d1-l1" x="500.0" y="54.0" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">one per pocket, or one per file</text>
-    <text id="stage-3-d1-l2" x="500.0" y="69.2" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">without a pocket field</text>
-    <text id="stage-3-d2-l1" x="500.0" y="88.4" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">duplicates are counted, not</text>
-    <text id="stage-3-d2-l2" x="500.0" y="103.6" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">hidden</text>
-    <text id="stage-4-title" x="698.8" y="35.0" font-family="Helvetica, Arial, sans-serif" font-size="14.85" font-weight="bold" fill="#2a211a" text-anchor="middle">Plan</text>
-    <text id="stage-4-d1-l1" x="698.8" y="54.0" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">AiZynthFinder 4.4.1 with fixed</text>
-    <text id="stage-4-d1-l2" x="698.8" y="69.2" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">settings</text>
-    <text id="stage-4-d2-l1" x="698.8" y="88.4" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">USPTO and ring-breaker</text>
-    <text id="stage-4-d2-l2" x="698.8" y="103.6" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">policies, filter policy, depth 10,</text>
-    <text id="stage-4-d2-l3" x="698.8" y="118.8" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">500 iterations, 60 s per</text>
-    <text id="stage-4-d2-l4" x="698.8" y="134.0" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">molecule</text>
-    <text id="stage-5-title" x="897.6" y="35.0" font-family="Helvetica, Arial, sans-serif" font-size="14.85" font-weight="bold" fill="#2a211a" text-anchor="middle">Saved routes</text>
-    <text id="stage-5-d1-l1" x="897.6" y="54.0" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">one planner record per</text>
-    <text id="stage-5-d1-l2" x="897.6" y="69.2" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">molecule</text>
-    <text id="stage-5-d2-l1" x="897.6" y="88.4" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">reused on a repeat run when</text>
-    <text id="stage-5-d2-l2" x="897.6" y="103.6" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">stock, models and settings are</text>
-    <text id="stage-5-d2-l3" x="897.6" y="118.8" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">unchanged</text>
-    <text id="cmd-validate" x="301.2" y="172.0" font-family="Helvetica, Arial, sans-serif" font-size="12.10" fill="#6f6a65" text-anchor="middle">synspeq validate</text>
-    <text id="cmd-plan" x="798.2" y="172.0" font-family="Helvetica, Arial, sans-serif" font-size="12.10" fill="#6f6a65" text-anchor="middle">synspeq plan</text>
-    <text id="outcomes-title" x="14.0" y="203.0" font-family="Helvetica, Arial, sans-serif" font-size="13.75" font-weight="bold" fill="#2a211a" text-anchor="start">Each distinct molecule ends in one outcome</text>
-    <text id="outcome-1-title" x="106.4" y="243.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" font-weight="bold" fill="#2a211a" text-anchor="middle">direct purchase</text>
-    <text id="outcome-1-d-l1" x="106.4" y="258.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">a single in-stock molecule, no</text>
-    <text id="outcome-1-d-l2" x="106.4" y="272.5" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">reaction</text>
-    <text id="outcome-2-title" x="303.2" y="243.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" font-weight="bold" fill="#2a211a" text-anchor="middle">routed</text>
-    <text id="outcome-2-d-l1" x="303.2" y="258.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">a route of at least one reaction,</text>
-    <text id="outcome-2-d-l2" x="303.2" y="272.5" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">every leaf in stock</text>
-    <text id="outcome-3-title" x="500.0" y="243.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" font-weight="bold" fill="#2a211a" text-anchor="middle">found, no saved route</text>
-    <text id="outcome-3-d-l1" x="500.0" y="258.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">solved, but no all-in-stock tree</text>
-    <text id="outcome-3-d-l2" x="500.0" y="272.5" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">was saved</text>
-    <text id="outcome-4-title" x="696.8" y="243.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" font-weight="bold" fill="#2a211a" text-anchor="middle">unresolved</text>
-    <text id="outcome-4-d-l1" x="696.8" y="258.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">the search ended without a route</text>
-    <text id="outcome-5-title" x="893.6" y="243.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" font-weight="bold" fill="#2a211a" text-anchor="middle">pending or error</text>
-    <text id="outcome-5-d-l1" x="893.6" y="258.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">no planner record yet, or an</text>
-    <text id="outcome-5-d-l2" x="893.6" y="272.5" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#2a211a" text-anchor="middle">unusable one</text>
-    <text id="primary-note" x="320.4" y="203.0" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#6f6a65" text-anchor="start">The last three measures use the primary route: the first all-in-stock route in planner order.</text>
-    <text id="card-1-title" x="128.8" y="363.0" font-family="Helvetica, Arial, sans-serif" font-size="17.05" font-weight="bold" fill="#2a211a" text-anchor="middle">Findability</text>
-    <text id="card-1-denom-l1" x="128.8" y="378.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#6f6a65" text-anchor="middle">denominator: distinct molecules</text>
-    <text id="card-1-q-l1" x="128.8" y="396.5" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">Does the planner find a route to</text>
-    <text id="card-1-q-l2" x="128.8" y="412.3" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">purchasable starting materials?</text>
-    <text id="card-1-step-1-t-l1" x="128.8" y="449.0" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">run AiZynthFinder with fixed settings</text>
-    <text id="card-1-step-2-t-l1" x="128.8" y="483.6" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">found = a route whose every leaf is in</text>
-    <text id="card-1-step-2-t-l2" x="128.8" y="498.3" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">the stock</text>
-    <text id="card-1-step-3-t-l1" x="128.8" y="532.9" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">count the outcomes above</text>
-    <text id="card-1-out-Solved-l1" x="24.0" y="552.6" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a"><tspan font-weight="bold">Solved: </tspan>found, including directly</text>
-    <text id="card-1-out-Solved-l2" x="24.0" y="567.5" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">purchasable molecules</text>
-    <text id="card-1-out-Solved≥1-l1" x="24.0" y="585.5" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a"><tspan font-weight="bold">Solved≥1: </tspan>found and needing at least</text>
-    <text id="card-1-out-Solved≥1-l2" x="24.0" y="600.4" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">one reaction</text>
-    <text id="card-1-needs-t" x="128.8" y="672.8" font-family="Helvetica, Arial, sans-serif" font-size="11.22" fill="#2a211a" text-anchor="middle">needs: planner models and a stock</text>
-    <text id="card-2-title" x="376.2" y="363.0" font-family="Helvetica, Arial, sans-serif" font-size="17.05" font-weight="bold" fill="#2a211a" text-anchor="middle">Precedent support</text>
-    <text id="card-2-denom-l1" x="376.2" y="378.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#6f6a65" text-anchor="middle">denominator: routed molecules</text>
-    <text id="card-2-q-l1" x="376.2" y="396.5" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">Does every step of the route</text>
-    <text id="card-2-q-l2" x="376.2" y="412.3" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">resemble a reaction already</text>
-    <text id="card-2-q-l3" x="376.2" y="428.0" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">recorded?</text>
-    <text id="card-2-step-1-t-l1" x="376.2" y="464.7" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">write each step forward and atom-map</text>
-    <text id="card-2-step-1-t-l2" x="376.2" y="479.4" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">it (RXNMapper)</text>
-    <text id="card-2-step-2-t-l1" x="376.2" y="514.0" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">assign a reaction class</text>
-    <text id="card-2-step-2-t-l2" x="376.2" y="528.7" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">(Rxn-INSIGHT)</text>
-    <text id="card-2-step-3-t-l1" x="376.2" y="563.3" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">match the USPTO database: same</text>
-    <text id="card-2-step-3-t-l2" x="376.2" y="578.0" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">class, exact or similarity ≥ 0.6412</text>
-    <text id="card-2-out-Support-l1" x="271.5" y="597.7" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a"><tspan font-weight="bold">Support: </tspan>routed molecules whose</text>
-    <text id="card-2-out-Support-l2" x="271.5" y="612.6" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">primary route has precedent at every</text>
-    <text id="card-2-out-Support-l3" x="271.5" y="627.5" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">step</text>
-    <text id="card-2-needs-t" x="376.2" y="672.8" font-family="Helvetica, Arial, sans-serif" font-size="11.22" fill="#2a211a" text-anchor="middle">needs: USPTO reaction database</text>
-    <text id="card-3-title" x="623.8" y="363.0" font-family="Helvetica, Arial, sans-serif" font-size="17.05" font-weight="bold" fill="#2a211a" text-anchor="middle">Residual steps</text>
-    <text id="card-3-denom-l1" x="623.8" y="378.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#6f6a65" text-anchor="middle">denominator: routed molecules</text>
-    <text id="card-3-q-l1" x="623.8" y="396.5" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">How much of the route must still be</text>
-    <text id="card-3-q-l2" x="623.8" y="412.3" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">run if everything purchasable is</text>
-    <text id="card-3-q-l3" x="623.8" y="428.0" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">bought?</text>
-    <text id="card-3-step-1-t-l1" x="623.8" y="464.7" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">walk down the primary route</text>
-    <text id="card-3-step-2-t-l1" x="623.8" y="499.4" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">stop at the first intermediate in a</text>
-    <text id="card-3-step-2-t-l2" x="623.8" y="514.0" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">purchasing catalog: Enamine building</text>
-    <text id="card-3-step-2-t-l3" x="623.8" y="528.7" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">blocks, then REAL on demand</text>
-    <text id="card-3-step-3-t-l1" x="623.8" y="563.3" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">count the reactions above that point</text>
-    <text id="card-3-out-Residual-l1" x="519.0" y="583.0" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a"><tspan font-weight="bold">Residual: </tspan>median number of reactions</text>
-    <text id="card-3-out-Residual-l2" x="519.0" y="598.0" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">left</text>
-    <text id="card-3-out-On demand-l1" x="519.0" y="615.9" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a"><tspan font-weight="bold">On demand: </tspan>share that stop at a</text>
-    <text id="card-3-out-On demand-l2" x="519.0" y="630.8" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">make-on-demand compound</text>
-    <text id="card-3-needs-t" x="623.8" y="672.8" font-family="Helvetica, Arial, sans-serif" font-size="11.22" fill="#2a211a" text-anchor="middle">needs: a purchasing catalog</text>
-    <text id="card-4-title" x="871.2" y="363.0" font-family="Helvetica, Arial, sans-serif" font-size="17.05" font-weight="bold" fill="#2a211a" text-anchor="middle">Scaffold diversity</text>
-    <text id="card-4-denom-l1" x="871.2" y="378.0" font-family="Helvetica, Arial, sans-serif" font-size="11.33" fill="#6f6a65" text-anchor="middle">denominator: routed molecules with a ring</text>
-    <text id="card-4-q-l1" x="871.2" y="396.5" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">Is the set diverse, or collapsed</text>
-    <text id="card-4-q-l2" x="871.2" y="412.3" font-family="Helvetica, Arial, sans-serif" font-size="12.32" font-weight="bold" fill="#2a211a" text-anchor="middle">onto a few scaffolds?</text>
-    <text id="card-4-step-1-t-l1" x="871.2" y="449.0" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">reduce each molecule to its generic</text>
-    <text id="card-4-step-1-t-l2" x="871.2" y="463.6" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">Bemis–Murcko scaffold</text>
-    <text id="card-4-step-2-t-l1" x="871.2" y="498.3" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">rank scaffolds from the most to the</text>
-    <text id="card-4-step-2-t-l2" x="871.2" y="512.9" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">least common</text>
-    <text id="card-4-step-3-t-l1" x="871.2" y="547.5" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">N50 is the number of scaffolds that</text>
-    <text id="card-4-step-3-t-l2" x="871.2" y="562.2" font-family="Helvetica, Arial, sans-serif" font-size="11.44" fill="#2a211a" text-anchor="middle">cover half of the molecules</text>
-    <text id="card-4-out-N50-l1" x="766.5" y="581.9" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a"><tspan font-weight="bold">N50: </tspan>also CSR-AUC, the</text>
-    <text id="card-4-out-N50-l2" x="766.5" y="596.8" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">unique-scaffold ratio and N50 on</text>
-    <text id="card-4-out-N50-l3" x="766.5" y="611.8" font-family="Helvetica, Arial, sans-serif" font-size="11.66" fill="#2a211a" text-anchor="start">3,000-molecule subsamples</text>
-    <text id="card-4-needs-t" x="871.2" y="672.8" font-family="Helvetica, Arial, sans-serif" font-size="11.22" fill="#2a211a" text-anchor="middle">needs: nothing extra</text>
-    <text id="outputs-title" x="500.0" y="738.7" font-family="Helvetica, Arial, sans-serif" font-size="14.85" font-weight="bold" fill="#2a211a" text-anchor="middle">report.html  ·  report.json  ·  molecules.csv  ·  run_manifest.json</text>
-    <text id="outputs-d-l1" x="500.0" y="756.7" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">Every number comes with its counts and denominator. The run manifest records the stock, the planner settings and the checksum of every resource. A missing resource is</text>
-    <text id="outputs-d-l2" x="500.0" y="771.9" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#2a211a" text-anchor="middle">reported as not assessed, unavailable, bound or blocked, never as 0%. Results are comparable only under the same stock and planner settings.</text>
-    <text id="cmd-evaluate" x="512.0" y="711.7" font-family="Helvetica, Arial, sans-serif" font-size="12.10" fill="#6f6a65" text-anchor="start">synspeq evaluate  ·  synspeq report</text>
-    <text id="cmd-run" x="986.0" y="805.7" font-family="Helvetica, Arial, sans-serif" font-size="11.88" fill="#6f6a65" text-anchor="end">synspeq run does all of it, from the SDF to the report</text>
+    <text id="stage-1-title" x="95.2" y="42.0" font-family="Helvetica, Arial, sans-serif" font-size="15.60" font-weight="bold" fill="#2a211a" text-anchor="middle">Input molecules</text>
+    <text id="stage-1-d-l1" x="95.2" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">SDF, CSV or SMILES</text>
+    <text id="stage-2-title" x="277.6" y="42.0" font-family="Helvetica, Arial, sans-serif" font-size="15.60" font-weight="bold" fill="#2a211a" text-anchor="middle">Ingest</text>
+    <text id="stage-2-d-l1" x="277.6" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">validity, identity</text>
+    <text id="stage-3-title" x="460.0" y="42.0" font-family="Helvetica, Arial, sans-serif" font-size="15.60" font-weight="bold" fill="#2a211a" text-anchor="middle">Distinct molecules</text>
+    <text id="stage-3-d-l1" x="460.0" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">per pocket, or global</text>
+    <text id="stage-4-title" x="642.4" y="42.0" font-family="Helvetica, Arial, sans-serif" font-size="15.60" font-weight="bold" fill="#2a211a" text-anchor="middle">Plan</text>
+    <text id="stage-4-d-l1" x="642.4" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">AiZynthFinder, one stock</text>
+    <text id="stage-5-title" x="824.8" y="42.0" font-family="Helvetica, Arial, sans-serif" font-size="15.60" font-weight="bold" fill="#2a211a" text-anchor="middle">Saved routes</text>
+    <text id="stage-5-d-l1" x="824.8" y="61.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">all-in-stock trees</text>
+    <text id="outcome-1-title" x="238.0" y="156.6" font-family="Helvetica, Arial, sans-serif" font-size="15.00" font-weight="bold" fill="#2a211a" text-anchor="middle">purchasable</text>
+    <text id="outcome-2-title" x="460.0" y="156.6" font-family="Helvetica, Arial, sans-serif" font-size="15.00" font-weight="bold" fill="#2a211a" text-anchor="middle">routed</text>
+    <text id="outcome-3-title" x="682.0" y="156.6" font-family="Helvetica, Arial, sans-serif" font-size="15.00" font-weight="bold" fill="#2a211a" text-anchor="middle">no route found</text>
+    <text id="card-1-title" x="119.5" y="248.0" font-family="Helvetica, Arial, sans-serif" font-size="18.00" font-weight="bold" fill="#2a211a" text-anchor="middle">Findability</text>
+    <text id="card-1-q-l1" x="119.5" y="270.0" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">Is there a route to</text>
+    <text id="card-1-q-l2" x="119.5" y="288.4" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">purchasable starting</text>
+    <text id="card-1-q-l3" x="119.5" y="306.9" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">materials?</text>
+    <text id="card-1-step-1-t-l1" x="119.5" y="350.1" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">plan with AiZynthFinder</text>
+    <text id="card-1-step-2-t-l1" x="119.5" y="387.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">route found?</text>
+    <text id="card-1-out" x="119.5" y="420.1" font-family="Helvetica, Arial, sans-serif" font-size="15.00" font-weight="bold" fill="#2a211a" text-anchor="middle">Solved, Solved≥1</text>
+    <text id="card-1-needs-t" x="119.5" y="501.6" font-family="Helvetica, Arial, sans-serif" font-size="12.24" fill="#2a211a" text-anchor="middle">needs: stock</text>
+    <text id="card-2-title" x="346.5" y="248.0" font-family="Helvetica, Arial, sans-serif" font-size="18.00" font-weight="bold" fill="#2a211a" text-anchor="middle">Precedent support</text>
+    <text id="card-2-q-l1" x="346.5" y="270.0" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">Has each step been recorded</text>
+    <text id="card-2-q-l2" x="346.5" y="288.4" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">before?</text>
+    <text id="card-2-step-1-t-l1" x="346.5" y="331.6" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">map each step</text>
+    <text id="card-2-step-2-t-l1" x="346.5" y="368.5" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">match USPTO, ≥ 0.6412</text>
+    <text id="card-2-step-3-t-l1" x="346.5" y="405.4" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">every step matched?</text>
+    <text id="card-2-out" x="346.5" y="438.6" font-family="Helvetica, Arial, sans-serif" font-size="15.00" font-weight="bold" fill="#2a211a" text-anchor="middle">Support</text>
+    <text id="card-2-needs-t" x="346.5" y="501.6" font-family="Helvetica, Arial, sans-serif" font-size="12.24" fill="#2a211a" text-anchor="middle">needs: USPTO database</text>
+    <text id="card-3-title" x="573.5" y="248.0" font-family="Helvetica, Arial, sans-serif" font-size="18.00" font-weight="bold" fill="#2a211a" text-anchor="middle">Residual steps</text>
+    <text id="card-3-q-l1" x="573.5" y="270.0" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">How much is left to run after</text>
+    <text id="card-3-q-l2" x="573.5" y="288.4" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">buying?</text>
+    <text id="card-3-step-1-t-l1" x="573.5" y="331.6" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">walk down the route</text>
+    <text id="card-3-step-2-t-l1" x="573.5" y="368.5" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">stop at a purchasable</text>
+    <text id="card-3-step-2-t-l2" x="573.5" y="385.4" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">intermediate</text>
+    <text id="card-3-step-3-t-l1" x="573.5" y="422.3" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">count reactions above</text>
+    <text id="card-3-out" x="573.5" y="455.4" font-family="Helvetica, Arial, sans-serif" font-size="15.00" font-weight="bold" fill="#2a211a" text-anchor="middle">Residual, On demand</text>
+    <text id="card-3-needs-t" x="573.5" y="501.6" font-family="Helvetica, Arial, sans-serif" font-size="12.24" fill="#2a211a" text-anchor="middle">needs: purchasing catalog</text>
+    <text id="card-4-title" x="800.5" y="248.0" font-family="Helvetica, Arial, sans-serif" font-size="18.00" font-weight="bold" fill="#2a211a" text-anchor="middle">Scaffold diversity</text>
+    <text id="card-4-q-l1" x="800.5" y="270.0" font-family="Helvetica, Arial, sans-serif" font-size="14.40" fill="#6f6a65" text-anchor="middle">Is the set diverse?</text>
+    <text id="card-4-step-1-t-l1" x="800.5" y="313.2" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">generic scaffolds</text>
+    <text id="card-4-step-2-t-l1" x="800.5" y="350.1" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">rank by frequency</text>
+    <text id="card-4-step-3-t-l1" x="800.5" y="387.0" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">scaffolds for half</text>
+    <text id="card-4-out" x="800.5" y="420.1" font-family="Helvetica, Arial, sans-serif" font-size="15.00" font-weight="bold" fill="#2a211a" text-anchor="middle">N50</text>
+    <text id="card-4-needs-t" x="800.5" y="501.6" font-family="Helvetica, Arial, sans-serif" font-size="12.24" fill="#2a211a" text-anchor="middle">needs: nothing extra</text>
+    <text id="outputs-title" x="460.0" y="571.4" font-family="Helvetica, Arial, sans-serif" font-size="15.60" font-weight="bold" fill="#2a211a" text-anchor="middle">report.html  ·  report.json  ·  molecules.csv  ·  run_manifest.json</text>
+    <text id="outputs-d" x="460.0" y="590.4" font-family="Helvetica, Arial, sans-serif" font-size="13.20" fill="#2a211a" text-anchor="middle">every number with its counts and denominator</text>
   </g>
 </svg>
