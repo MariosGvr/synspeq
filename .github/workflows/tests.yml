@@ -5,10 +5,36 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.10", "3.12"]
+        python: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "${{ matrix.python }}"}
-      - run: pip install -e .
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
       - run: python -m unittest discover -s tests/unit -t .
+      - name: Demo from the README, through the command line
+        run: |
+          export SYNSPEQ_DATA_DIR="$RUNNER_TEMP/store"
+          synspeq data import enamine_bb examples/demo/building_blocks.smi
+          synspeq evaluate examples/demo/molecules.sdf --routes-dir examples/demo/routes \
+            --pocket-field pocket_id --measures findability,residual-steps,scaffold-diversity \
+            --resources enamine_bb --out "$RUNNER_TEMP/demo" | tee "$RUNNER_TEMP/demo.txt"
+          grep -F "Findability  Solved 83.3%  Solved>=1 66.7%  distinct 6  complete=True" "$RUNNER_TEMP/demo.txt"
+          test -s "$RUNNER_TEMP/demo/report.html"
+  full-install:
+    # the pinned planner and precedent-support stack installs and imports (no data downloads)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install -e ".[planner,support]" -c constraints.txt
+      - run: |
+          python - <<'PY'
+          import aizynthfinder, rdkit, rxn_insight, synspeq
+          from synspeq.environment import environment_info, rdkit_note
+          print(environment_info())
+          assert rdkit_note() is None, rdkit_note()
+          PY
+      - run: synspeq data check || test $? -eq 2        # nothing is downloaded: exit code 2 means "resources missing", as designed

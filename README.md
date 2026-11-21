@@ -21,7 +21,7 @@
 
 ## Overview
 
-SYNSPEQ evaluates the synthesizability of molecule sets supplied as SDF files. It reports findability, retrieved
+SYNSPEQ evaluates the synthesizability of molecule sets supplied as SDF, CSV or SMILES files. It reports findability, retrieved
 precedent support, residual steps after purchasing and scaffold diversity, with the counts and denominators behind each
 number. Results are comparable only when the stock and planner settings are the same.
 
@@ -34,49 +34,15 @@ number. Results are comparable only when the stock and planner settings are the 
 
 ## Quick start
 
-**1. Install**
+**1. Install** (Python 3.10 to 3.12; the versions are pinned to the ones behind the paper's results)
 ```bash
 git clone https://github.com/MariosGvr/synspeq && cd synspeq
 conda env create -f environment.yml        # includes AiZynthFinder and Rxn-INSIGHT
 conda activate synspeq
 ```
+Without conda: `pip install -e ".[planner,support]" -c constraints.txt`. The core install, `pip install -e .`, is enough for the demo below.
 
-**2. Get the data** (terms and citations are shown before each download; about 2 GB in total)
-```bash
-synspeq data download aizynth_zinc --dest data/aizynth --accept-terms      # planner models and the default stock
-synspeq data download uspto_rxninsight_db --dest data/uspto --accept-terms # reaction database for precedent support
-synspeq data check                         # what is installed and what each measure still needs
-```
-
-**3. Run**
-```bash
-synspeq run molecules.sdf --pocket-field pocket_id --out results/    # plan with AiZynthFinder, then evaluate
-```
-`--measures` limits a run to some of findability, precedent-support, residual-steps and scaffold-diversity. `--pocket-field` is optional: it names an SDF property that groups molecules by target. Without it, duplicates are
-removed across the whole file. Open `results/evaluation/report.html` for the report.
-
-Planning runs a time-limited search per distinct molecule (60 s each by default), so large sets should be split over
-several processes (`--workers`) or SLURM array tasks (`synspeq plan --chunk i --n-chunks N`), then evaluated with
-`synspeq evaluate` on the resulting records.
-
-**4. Add purchasing information (residual steps, optional)**
-Residual steps need a purchasing catalog beyond the planner stock, for example Enamine building blocks (they are used as a
-purchasing catalog only; the planner stock stays AiZynthFinder's ZINC stock unless you list them under `--planner-stock`):
-```bash
-synspeq data import enamine_bb data/Enamine_Building_Blocks_Stock.sdf
-synspeq run molecules.sdf --pocket-field pocket_id --resources enamine_bb --out results/
-```
-Planner records in `results/routes` and the reaction features used for precedent support are reused when a run is repeated with the same stock,
-model files and settings; the summaries are recomputed. If the stock or models change, SYNSPEQ refuses to reuse the folder;
-give it a new `--out`.
-
-To evaluate saved JSON from a previous AiZynthFinder run without rerunning planning:
-
-```bash
-synspeq evaluate molecules.sdf --routes-dir aizynth_json/ --pocket-field pocket_id --out results/
-```
-
-### Try it on the demo
+**2. Try it in a minute, with no downloads**
 `examples/demo/` holds a seven-molecule SDF with hand-written planner records in AiZynthFinder's JSON layout and a
 two-entry purchasing catalog. The records illustrate the input format; they are not planner output.
 
@@ -95,8 +61,37 @@ Residual steps  median 1  frontier found 50.0%  on demand n/a (needs both tiers)
 Scaffold diversity  N50 1  unique scaffold ratio 0.250  CSR-AUC 1.000
 ```
 The input has seven valid records and one invalid record. One molecule appears twice, so six distinct molecules
-are evaluated. Outputs include the HTML report, `report.json`, per-molecule results in `molecules.csv` and resource
-metadata in `run_manifest.json`. The manifest records the resources used, including their sizes and checksums.
+are evaluated. Open `demo_results/report.html` for the report. The other outputs are `report.json`, per-molecule results in
+`molecules.csv` and resource metadata in `run_manifest.json`; [`docs/OUTPUTS.md`](docs/OUTPUTS.md) describes every file.
+
+**3. Get the data for your own molecules** (terms and citations are shown before each download; about 2 GB in total, about 5 minutes)
+```bash
+synspeq data download aizynth_zinc --dest data/aizynth --accept-terms      # planner models and the default stock
+synspeq data download uspto_rxninsight_db --dest data/uspto --accept-terms # reaction database for precedent support
+synspeq data check                         # what is installed and what each measure still needs
+```
+Downloads are registered in a resource store: `$SYNSPEQ_DATA_DIR`, else `./.synspeq` if that folder exists, else
+`~/.local/share/synspeq`. `synspeq data check` prints which one is in use.
+
+**4. Run**
+```bash
+synspeq run molecules.sdf --pocket-field pocket_id --out results/    # plan with AiZynthFinder, then evaluate
+```
+`--measures` limits a run to some of findability, precedent-support, residual-steps and scaffold-diversity. `--pocket-field` is optional: it names an SDF property that groups molecules by target. Without it, duplicates are
+removed across the whole file. Open `results/evaluation/report.html` for the report.
+
+Planning runs a time-limited search per distinct molecule (60 s each by default). The first run also builds a cached index of the
+reaction database for precedent support, which takes a few minutes; later runs need about half a minute for it. For large sets, split the planning over processes
+(`--workers`) or SLURM array tasks; see [`docs/LARGE_SETS.md`](docs/LARGE_SETS.md).
+
+**5. Add purchasing information (residual steps, optional)**
+Residual steps need a purchasing catalog beyond the planner stock, for example Enamine building blocks:
+```bash
+synspeq data import enamine_bb data/Enamine_Building_Blocks_Stock.sdf
+synspeq run molecules.sdf --pocket-field pocket_id --resources enamine_bb --out results/
+```
+[`docs/PURCHASING_CATALOGS.md`](docs/PURCHASING_CATALOGS.md) covers Enamine REAL, the reuse of saved planner records and how to
+evaluate JSON from an earlier AiZynthFinder run. To use the numbers in a script, see [`docs/PYTHON.md`](docs/PYTHON.md).
 
 ## Minimum setup and the paper's resources
 [`docs/MINIMUM_SETUP.md`](docs/MINIMUM_SETUP.md) lists the two free downloads that are enough to run findability, precedent support and scaffold diversity, and what each measure needs.
@@ -166,19 +161,21 @@ purchasing catalog. The scaffold diversity measures require no additional catalo
 ```bash
 conda env create -f environment.yml        # full: planner + precedent support (recommended)
 conda env create -f environment-core.yml   # core: ingestion, findability replay, residual steps, scaffold diversity
-pip install -e .                           # into an environment you already manage
+pip install -e ".[planner,support]" -c constraints.txt   # full, into an environment you already manage
+pip install -e .                           # core
 ```
-`environment.yml` installs AiZynthFinder and Rxn-INSIGHT with pip inside the conda environment. The environment pins
-RDKit 2023.09, numpy < 2 and pandas < 3 for compatibility with AiZynthFinder 4.4.1. A conda-build recipe for the
-core package is in [`conda/`](conda).
+The environments pin RDKit 2023.09, numpy < 2, pandas < 3 and pyarrow < 21 for compatibility with AiZynthFinder 4.4.1. RDKit is
+pinned because molecule identity is the canonical SMILES, which can change between RDKit releases; each report records the
+versions it was made with, and SYNSPEQ prints a note when RDKit is another release series. A conda-build recipe for the core
+package is in [`conda/`](conda).
 
 ## Status
-Early development. All four measures and live planning are implemented, and the package produces an HTML report.
+Early development. All four measures and live planning are implemented, and the package produces an HTML report. See [`CHANGELOG.md`](CHANGELOG.md).
 Multi-population comparison plots and a PyPI / conda-forge release are planned.
 
 ## Contributing and testing
 ```bash
-python -m unittest discover -s tests/unit -t .     # 45+ tests, no network, no third-party data
+python -m unittest discover -s tests/unit -t .     # no network, no third-party data
 ```
 Issues and pull requests are welcome.
 

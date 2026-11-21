@@ -4,11 +4,12 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.9
-  - rdkit
-  - pandas
+  - python>=3.10,<3.13
+  - rdkit=2023.09.6
+  - numpy<2
+  - pandas<3
   - pyyaml
-  - pyarrow
+  - pyarrow>=14,<21
   - pip
   - pip:
       - -e .                    # run from the repository root (the clone)

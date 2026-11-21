@@ -4,8 +4,10 @@ SYNSPEQ ships **no** third-party data. It ships a manifest (`src/synspeq/data/re
 and download help. You choose which catalogs to use; the report lists the resources used.
 
 ## Commands
-The resource registry lives in `./.synspeq` (the current directory, like `.git`). Set `SYNSPEQ_DATA_DIR`, put `data_dir:` in
-`config.yaml`, or pass `--data-dir` to use another store (command line, then config file, then environment, then default).
+The resource registry is the folder named by `SYNSPEQ_DATA_DIR`, else `./.synspeq` when that folder exists in the current directory
+(a project-local store, like `.git`), else `~/.local/share/synspeq`, so commands find the same resources from any directory.
+Put `data_dir:` in `config.yaml` or pass `--data-dir` to use another store (command line, then config file, then environment, then
+default). `synspeq data check` prints the store it is using.
 ```bash
 synspeq data list                      # every supported resource, how it is obtained, and where your copy is registered
 synspeq data info zinc20_tranches      # source URL, access type, file format, citation, terms, warnings

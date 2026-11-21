@@ -7,18 +7,24 @@ name = "synspeq"
 version = "0.1.0.dev0"
 description = "SYNSPEQ: SYNthesizability through Standardized Planner Evaluation and Quantification"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10,<3.13"
 license = {text = "Apache-2.0"}
 classifiers = [
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Chemistry",
 ]
-dependencies = ["rdkit", "pyyaml", "pandas", "pyarrow", "tables"]
+# RDKit is pinned to the release series behind the reported results: molecule identity is the canonical SMILES, which can
+# change between RDKit releases. numpy < 2 and pandas < 3 follow AiZynthFinder 4.4.1.
+dependencies = ["rdkit>=2023.9,<2024", "numpy<2", "pandas<3", "pyyaml", "pyarrow>=14,<21", "tables"]
 
 [project.optional-dependencies]
-planner = ["aizynthfinder"]
-support = ["rxn-insight"]
+planner = ["aizynthfinder==4.4.1"]
+support = ["rxn-insight==0.1.3", "rxnmapper", "setuptools<81"]
+dev = ["ruff"]
 
 [project.scripts]
 synspeq = "synspeq.cli:main"
@@ -28,3 +34,9 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 synspeq = ["data/*.yaml"]
+
+[tool.ruff]
+line-length = 140
+
+[tool.ruff.lint]
+select = ["E9", "F"]        # syntax errors and real mistakes (unused imports, undefined names); not style

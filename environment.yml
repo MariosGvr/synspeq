@@ -11,7 +11,7 @@ dependencies:
   - rdkit=2023.09.6
   - numpy<2
   - pandas<3
-  - pyarrow
+  - pyarrow>=14,<21
   - pyyaml
   - pytables
   - setuptools<81          # rxn-insight imports pkg_resources
