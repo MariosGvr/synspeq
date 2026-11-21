@@ -1,1 +1,146 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 380" width="1180" height="380" font-family="system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="SYNSPEQ pipeline: molecules are ingested, planned and evaluated by four measures into one report"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b7785"/></marker></defs><rect x="20" y="30" width="170" height="64" rx="10" fill="#e8eef7" stroke="#2f6f9f" stroke-width="2"/><text x="105.0" y="59.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">molecules.sdf</text><text x="105.0" y="79.0" text-anchor="middle" font-size="12" fill="#3d4650">your molecules</text><rect x="214" y="30" width="170" height="64" rx="10" fill="#e8eef7" stroke="#2f6f9f" stroke-width="2"/><text x="299.0" y="59.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Ingest</text><text x="299.0" y="79.0" text-anchor="middle" font-size="12" fill="#3d4650">validity, identity</text><rect x="408" y="30" width="170" height="64" rx="10" fill="#e8eef7" stroke="#2f6f9f" stroke-width="2"/><text x="493.0" y="59.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Distinct molecules</text><text x="493.0" y="79.0" text-anchor="middle" font-size="12" fill="#3d4650">per pocket, or global</text><rect x="602" y="30" width="170" height="64" rx="10" fill="#e8eef7" stroke="#2f6f9f" stroke-width="2"/><text x="687.0" y="59.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Plan</text><text x="687.0" y="79.0" text-anchor="middle" font-size="12" fill="#3d4650">AiZynthFinder, your stock</text><rect x="893.0" y="30" width="170" height="64" rx="10" fill="#e8eef7" stroke="#2f6f9f" stroke-width="2"/><text x="978.0" y="59.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Saved routes</text><text x="978.0" y="79.0" text-anchor="middle" font-size="12" fill="#3d4650">all-in-stock trees</text><line x1="190" y1="62.0" x2="214" y2="62.0" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><line x1="384" y1="62.0" x2="408" y2="62.0" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><line x1="578" y1="62.0" x2="602" y2="62.0" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><line x1="772" y1="62.0" x2="893.0" y2="62.0" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><rect x="408" y="190" width="170" height="64" rx="10" fill="#fff4d6" stroke="#c9a227" stroke-width="2"/><text x="493.0" y="219.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Scaffold diversity</text><text x="493.0" y="239.0" text-anchor="middle" font-size="12" fill="#3d4650">scaffolds, N50</text><rect x="602" y="190" width="170" height="64" rx="10" fill="#fff4d6" stroke="#c9a227" stroke-width="2"/><text x="687.0" y="219.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Findability</text><text x="687.0" y="239.0" text-anchor="middle" font-size="12" fill="#3d4650">routes found</text><rect x="796" y="190" width="170" height="64" rx="10" fill="#fff4d6" stroke="#c9a227" stroke-width="2"/><text x="881.0" y="219.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Precedent support</text><text x="881.0" y="239.0" text-anchor="middle" font-size="12" fill="#3d4650">precedent from USPTO</text><rect x="990" y="190" width="170" height="64" rx="10" fill="#fff4d6" stroke="#c9a227" stroke-width="2"/><text x="1075.0" y="219.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">Residual steps</text><text x="1075.0" y="239.0" text-anchor="middle" font-size="12" fill="#3d4650">purchasing frontier</text><line x1="493.0" y1="94" x2="493.0" y2="190" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><line x1="687.0" y1="94" x2="687.0" y2="190" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><line x1="978.0" y1="94" x2="978.0" y2="128" stroke="#6b7785" stroke-width="2"/><line x1="881.0" y1="128" x2="1075.0" y2="128" stroke="#6b7785" stroke-width="2"/><line x1="881.0" y1="128" x2="881.0" y2="190" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><line x1="1075.0" y1="128" x2="1075.0" y2="190" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><line x1="493.0" y1="254" x2="493.0" y2="278" stroke="#6b7785" stroke-width="2"/><line x1="687.0" y1="254" x2="687.0" y2="278" stroke="#6b7785" stroke-width="2"/><line x1="881.0" y1="254" x2="881.0" y2="278" stroke="#6b7785" stroke-width="2"/><line x1="1075.0" y1="254" x2="1075.0" y2="278" stroke="#6b7785" stroke-width="2"/><line x1="493.0" y1="278" x2="1075.0" y2="278" stroke="#6b7785" stroke-width="2"/><line x1="784.0" y1="278" x2="784.0" y2="310" stroke="#6b7785" stroke-width="2" marker-end="url(#a)"/><rect x="594.0" y="310" width="380" height="64" rx="10" fill="#e3f1e8" stroke="#4c9f70" stroke-width="2"/><text x="784.0" y="347.0" text-anchor="middle" font-size="14" font-weight="600" fill="#1b1f24">report.html · report.json · molecules.csv</text></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="580" height="334" viewBox="0 36 580 334">
+  <title>SYNSPEQ pipeline and the four measures on a worked example</title>
+  <desc>Molecules are ingested and planned; outcomes are counted by four measures with their denominators; the example is schematic.</desc>
+  <rect id="background" x="0" y="36" width="580" height="334" fill="#FFFFFF"/>
+  <g id="layer-cards">
+    <rect id="card-1-box" x="13.00" y="178.00" width="128.00" height="184.00" rx="6" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="card-2-box" x="155.00" y="178.00" width="128.00" height="184.00" rx="6" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="card-3-box" x="297.00" y="178.00" width="128.00" height="184.00" rx="6" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="card-4-box" x="439.00" y="178.00" width="128.00" height="184.00" rx="6" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+  </g>
+  <g id="layer-arrows">
+    <g id="arrow-pipeline-1"><line id="arrow-pipeline-1-line" x1="109.5" y1="69.0" x2="119.10" y2="69.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/><path id="arrow-pipeline-1-head" d="M122.5,69.0L119.10,70.60L119.10,67.40Z" fill="#2a211a" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/></g>
+    <g id="arrow-pipeline-2"><line id="arrow-pipeline-2-line" x1="225.5" y1="69.0" x2="235.10" y2="69.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/><path id="arrow-pipeline-2-head" d="M238.5,69.0L235.10,70.60L235.10,67.40Z" fill="#2a211a" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/></g>
+    <g id="arrow-pipeline-3"><line id="arrow-pipeline-3-line" x1="341.5" y1="69.0" x2="351.10" y2="69.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/><path id="arrow-pipeline-3-head" d="M354.5,69.0L351.10,70.60L351.10,67.40Z" fill="#2a211a" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/></g>
+    <g id="arrow-pipeline-4"><line id="arrow-pipeline-4-line" x1="457.5" y1="69.0" x2="467.10" y2="69.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/><path id="arrow-pipeline-4-head" d="M470.5,69.0L467.10,70.60L467.10,67.40Z" fill="#2a211a" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/></g>
+    <line id="plan-down" x1="522.00" y1="93.50" x2="522.00" y2="104.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="plan-across" x1="522.00" y1="104.00" x2="290.00" y2="104.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <g id="arrow-plan-outcomes"><line id="arrow-plan-outcomes-line" x1="290.0" y1="104" x2="290.00" y2="108.60" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/><path id="arrow-plan-outcomes-head" d="M290.0,112L288.40,108.60L291.60,108.60Z" fill="#2a211a" stroke="#2a211a" stroke-width="0.9" stroke-linejoin="round"/></g>
+    <line id="group-purchasable-bar" x1="105.00" y1="148.00" x2="171.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-purchasable-l" x1="105.00" y1="144.00" x2="105.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-purchasable-r" x1="171.00" y1="144.00" x2="171.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-routed-bar" x1="181.00" y1="148.00" x2="361.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-routed-l" x1="181.00" y1="144.00" x2="181.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-routed-r" x1="361.00" y1="144.00" x2="361.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-noroute-bar" x1="371.00" y1="148.00" x2="475.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-noroute-l" x1="371.00" y1="144.00" x2="371.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="group-noroute-r" x1="475.00" y1="144.00" x2="475.00" y2="148.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="c3-e0" x1="343.00" y1="283.00" x2="343.00" y2="296.50" fill="none" stroke="#8a8580" stroke-width="0.9" stroke-linecap="round" stroke-dasharray="2 1.6"/>
+    <line id="c3-prune" x1="307.00" y1="290.00" x2="415.00" y2="290.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round" stroke-dasharray="3 2"/>
+    <line id="c3-e1" x1="346.00" y1="312.00" x2="358.50" y2="321.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="c3-e2" x1="376.00" y1="312.00" x2="363.50" y2="321.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="c3-e3" x1="361.00" y1="327.40" x2="361.00" y2="335.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="c4-bracket" x1="448.00" y1="304.00" x2="512.00" y2="304.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="c4-bracket-l" x1="448.00" y1="300.00" x2="448.00" y2="304.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+    <line id="c4-bracket-r" x1="512.00" y1="300.00" x2="512.00" y2="304.00" fill="none" stroke="#2a211a" stroke-width="0.9" stroke-linecap="round"/>
+  </g>
+  <g id="layer-nodes">
+    <g id="node-pipeline-1"><rect id="node-pipeline-1-box" x="8" y="46" width="100" height="46" rx="4" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/><text id="node-pipeline-1-text-1" x="58.00" y="66.00" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#2a211a" text-anchor="middle">Input molecules</text><text id="node-pipeline-1-text-2" x="58.00" y="77.20" font-family="Helvetica, Arial, sans-serif" font-size="8.8" fill="#2a211a" text-anchor="middle">SDF or SMILES</text></g>
+    <g id="node-pipeline-2"><rect id="node-pipeline-2-box" x="124" y="46" width="100" height="46" rx="4" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/><text id="node-pipeline-2-text-1" x="174.00" y="66.00" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#2a211a" text-anchor="middle">Ingest</text><text id="node-pipeline-2-text-2" x="174.00" y="77.20" font-family="Helvetica, Arial, sans-serif" font-size="8.8" fill="#2a211a" text-anchor="middle">validity, identity</text></g>
+    <g id="node-pipeline-3"><rect id="node-pipeline-3-box" x="240" y="46" width="100" height="46" rx="4" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/><text id="node-pipeline-3-text-1" x="290.00" y="66.00" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#2a211a" text-anchor="middle">Distinct molecules</text><text id="node-pipeline-3-text-2" x="290.00" y="77.20" font-family="Helvetica, Arial, sans-serif" font-size="8.8" fill="#2a211a" text-anchor="middle">per pocket, or global</text></g>
+    <g id="node-pipeline-4"><rect id="node-pipeline-4-box" x="356" y="46" width="100" height="46" rx="4" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/><text id="node-pipeline-4-text-1" x="406.00" y="60.40" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#2a211a" text-anchor="middle">Plan</text><text id="node-pipeline-4-text-2" x="406.00" y="71.60" font-family="Helvetica, Arial, sans-serif" font-size="8.8" fill="#2a211a" text-anchor="middle">AiZynthFinder,</text><text id="node-pipeline-4-text-3" x="406.00" y="82.80" font-family="Helvetica, Arial, sans-serif" font-size="8.8" fill="#2a211a" text-anchor="middle">one stock</text></g>
+    <g id="node-pipeline-5"><rect id="node-pipeline-5-box" x="472" y="46" width="100" height="46" rx="4" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/><text id="node-pipeline-5-text-1" x="522.00" y="66.00" font-family="Helvetica, Arial, sans-serif" font-size="9.6" font-weight="bold" fill="#2a211a" text-anchor="middle">Saved routes</text><text id="node-pipeline-5-text-2" x="522.00" y="77.20" font-family="Helvetica, Arial, sans-serif" font-size="8.8" fill="#2a211a" text-anchor="middle">all-in-stock trees</text></g>
+    <circle id="molecule-1" cx="119.00" cy="126.00" r="11" fill="#abddde" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-2" cx="157.00" cy="126.00" r="11" fill="#abddde" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-3" cx="195.00" cy="126.00" r="11" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-4" cx="233.00" cy="126.00" r="11" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-5" cx="271.00" cy="126.00" r="11" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-6" cx="309.00" cy="126.00" r="11" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-7" cx="347.00" cy="126.00" r="11" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-8" cx="385.00" cy="126.00" r="11" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-9" cx="423.00" cy="126.00" r="11" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="molecule-10" cx="461.00" cy="126.00" r="11" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="c1-cell-1" x="27.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#abddde" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-2" x="37.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#abddde" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-3" x="47.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-4" x="57.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-5" x="67.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-6" x="77.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-7" x="87.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-8" x="97.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-9" x="107.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.8"/>
+    <rect id="c1-cell-10" x="117.00" y="282.00" width="8.50" height="15.00" rx="1.5" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.8"/>
+    <circle id="c2-mol-1" cx="173.00" cy="288.00" r="8.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="c2-answer-1" x="164.00" y="302.00" width="18.00" height="12.00" rx="3" fill="#eccbae" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c2-mol-2" cx="196.00" cy="288.00" r="8.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="c2-answer-2" x="187.00" y="302.00" width="18.00" height="12.00" rx="3" fill="#eccbae" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c2-mol-3" cx="219.00" cy="288.00" r="8.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="c2-answer-3" x="210.00" y="302.00" width="18.00" height="12.00" rx="3" fill="#eccbae" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c2-mol-4" cx="242.00" cy="288.00" r="8.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="c2-answer-4" x="233.00" y="302.00" width="18.00" height="12.00" rx="3" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c2-mol-5" cx="265.00" cy="288.00" r="8.5" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="c2-answer-5" x="256.00" y="302.00" width="18.00" height="12.00" rx="3" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c3-earlier-steps" cx="343.00" cy="276.00" r="7" fill="#FFFFFF" stroke="#8a8580" stroke-width="0.9" stroke-dasharray="2 1.6"/>
+    <circle id="c3-i2" cx="343.00" cy="305.00" r="8" fill="#abddde" stroke="#2a211a" stroke-width="1.2"/>
+    <circle id="c3-b4" cx="379.00" cy="305.00" r="8" fill="#abddde" stroke="#2a211a" stroke-width="0.9"/>
+    <rect id="c3-reaction" x="357.80" y="321.00" width="6.40" height="6.40" rx="1" fill="#2a211a" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c3-product" cx="361.00" cy="343.00" r="8" fill="#f9c742" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c4-mol-1" cx="457.00" cy="288.00" r="8.5" fill="#eccbae" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c4-mol-2" cx="480.00" cy="288.00" r="8.5" fill="#eccbae" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c4-mol-3" cx="503.00" cy="288.00" r="8.5" fill="#b8c0d6" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c4-mol-4" cx="526.00" cy="288.00" r="8.5" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+    <circle id="c4-mol-5" cx="549.00" cy="288.00" r="8.5" fill="#FFFFFF" stroke="#2a211a" stroke-width="0.9"/>
+  </g>
+  <g id="layer-labels">
+    <text id="molecule-1-label" x="119.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m1</text>
+    <text id="molecule-2-label" x="157.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m2</text>
+    <text id="molecule-3-label" x="195.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m3</text>
+    <text id="molecule-4-label" x="233.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m4</text>
+    <text id="molecule-5-label" x="271.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m5</text>
+    <text id="molecule-6-label" x="309.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m6</text>
+    <text id="molecule-7-label" x="347.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m7</text>
+    <text id="molecule-8-label" x="385.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m8</text>
+    <text id="molecule-9-label" x="423.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m9</text>
+    <text id="molecule-10-label" x="461.00" y="128.80" font-family="Helvetica, Arial, sans-serif" font-size="8.5" fill="#2a211a" text-anchor="middle">m10</text>
+    <text id="group-purchasable-text" x="138.00" y="162.00" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#2a211a" text-anchor="middle">purchasable (2)</text>
+    <text id="group-routed-text" x="271.00" y="162.00" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#2a211a" text-anchor="middle">routed, at least one reaction (5)</text>
+    <text id="group-noroute-text" x="423.00" y="162.00" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#2a211a" text-anchor="middle">no route found (3)</text>
+    <text id="card-1-title" x="77.00" y="196.00" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#2a211a" text-anchor="middle">Findability</text>
+    <text id="card-1-value" x="77.00" y="215.00" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#2a211a" text-anchor="middle">7 / 10 = 70%</text>
+    <text id="card-1-desc-1" x="77.00" y="229.00" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">Does the planner find</text>
+    <text id="card-1-desc-2" x="77.00" y="240.80" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">a route to purchasable</text>
+    <text id="card-1-desc-3" x="77.00" y="252.60" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">starting materials?</text>
+    <text id="card-2-title" x="219.00" y="196.00" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#2a211a" text-anchor="middle">Precedent support</text>
+    <text id="card-2-value" x="219.00" y="215.00" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#2a211a" text-anchor="middle">3 / 5 = 60%</text>
+    <text id="card-2-desc-1" x="219.00" y="229.00" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">Does every step of the</text>
+    <text id="card-2-desc-2" x="219.00" y="240.80" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">route resemble a reaction</text>
+    <text id="card-2-desc-3" x="219.00" y="252.60" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">already recorded in</text>
+    <text id="card-2-desc-4" x="219.00" y="264.40" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">USPTO?</text>
+    <text id="card-3-title" x="361.00" y="196.00" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#2a211a" text-anchor="middle">Residual steps</text>
+    <text id="card-3-value" x="361.00" y="215.00" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#2a211a" text-anchor="middle">median 2</text>
+    <text id="card-3-desc-1" x="361.00" y="229.00" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">How much of the route</text>
+    <text id="card-3-desc-2" x="361.00" y="240.80" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">must still be run if</text>
+    <text id="card-3-desc-3" x="361.00" y="252.60" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">everything purchasable</text>
+    <text id="card-3-desc-4" x="361.00" y="264.40" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">is bought?</text>
+    <text id="card-4-title" x="503.00" y="196.00" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#2a211a" text-anchor="middle">Scaffold diversity</text>
+    <text id="card-4-value" x="503.00" y="215.00" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#2a211a" text-anchor="middle">N50 = 2</text>
+    <text id="card-4-desc-1" x="503.00" y="229.00" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">Is the set diverse, or</text>
+    <text id="card-4-desc-2" x="503.00" y="240.80" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">collapsed onto a few</text>
+    <text id="card-4-desc-3" x="503.00" y="252.60" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#2a211a" text-anchor="middle">scaffolds?</text>
+    <text id="c2-mol-1-label" x="173.00" y="290.80" font-family="Helvetica, Arial, sans-serif" font-size="8.2" fill="#2a211a" text-anchor="middle">m3</text>
+    <text id="c2-answer-1-text" x="173.00" y="310.60" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">yes</text>
+    <text id="c2-mol-2-label" x="196.00" y="290.80" font-family="Helvetica, Arial, sans-serif" font-size="8.2" fill="#2a211a" text-anchor="middle">m4</text>
+    <text id="c2-answer-2-text" x="196.00" y="310.60" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">yes</text>
+    <text id="c2-mol-3-label" x="219.00" y="290.80" font-family="Helvetica, Arial, sans-serif" font-size="8.2" fill="#2a211a" text-anchor="middle">m5</text>
+    <text id="c2-answer-3-text" x="219.00" y="310.60" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">yes</text>
+    <text id="c2-mol-4-label" x="242.00" y="290.80" font-family="Helvetica, Arial, sans-serif" font-size="8.2" fill="#2a211a" text-anchor="middle">m6</text>
+    <text id="c2-answer-4-text" x="242.00" y="310.60" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">no</text>
+    <text id="c2-mol-5-label" x="265.00" y="290.80" font-family="Helvetica, Arial, sans-serif" font-size="8.2" fill="#2a211a" text-anchor="middle">m7</text>
+    <text id="c2-answer-5-text" x="265.00" y="310.60" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">no</text>
+    <text id="c2-key" x="219.00" y="330.00" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">every step has a match?</text>
+    <text id="c3-earlier-steps-label" x="343.00" y="278.60" font-family="Helvetica, Arial, sans-serif" font-size="8" fill="#2a211a" text-anchor="middle">…</text>
+    <text id="c3-prune-text" x="415.00" y="285.00" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="end">prune here</text>
+    <text id="c3-i2-label" x="343.00" y="307.80" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">I₂</text>
+    <text id="c3-b4-label" x="379.00" y="307.80" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">B₄</text>
+    <text id="c3-product-label" x="361.00" y="345.80" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">P</text>
+    <text id="c4-mol-1-label" x="457.00" y="291.00" font-family="Helvetica, Arial, sans-serif" font-size="8.4" font-weight="bold" fill="#2a211a" text-anchor="middle">A</text>
+    <text id="c4-mol-2-label" x="480.00" y="291.00" font-family="Helvetica, Arial, sans-serif" font-size="8.4" font-weight="bold" fill="#2a211a" text-anchor="middle">A</text>
+    <text id="c4-mol-3-label" x="503.00" y="291.00" font-family="Helvetica, Arial, sans-serif" font-size="8.4" font-weight="bold" fill="#2a211a" text-anchor="middle">B</text>
+    <text id="c4-mol-4-label" x="526.00" y="291.00" font-family="Helvetica, Arial, sans-serif" font-size="8.4" font-weight="bold" fill="#2a211a" text-anchor="middle">C</text>
+    <text id="c4-mol-5-label" x="549.00" y="291.00" font-family="Helvetica, Arial, sans-serif" font-size="8.4" font-weight="bold" fill="#2a211a" text-anchor="middle">D</text>
+    <text id="c4-text-1" x="503.00" y="316.00" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">A and B cover 3 of 5,</text>
+    <text id="c4-text-2" x="503.00" y="326.00" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">at least half: N50 = 2</text>
+    <text id="c4-key" x="503.00" y="344.00" font-family="Helvetica, Arial, sans-serif" font-size="8.6" fill="#2a211a" text-anchor="middle">same letter = same scaffold</text>
+  </g>
+</svg>

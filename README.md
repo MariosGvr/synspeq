@@ -141,7 +141,7 @@ describes missing-resource handling.
 | have the default stock and the USPTO database | evaluates findability, precedent support and scaffold diversity; residual steps need a catalog beyond the planner stock |
 
 ## How it works
-<p align="center"><img src="docs/assets/how_it_works.svg" alt="SYNSPEQ pipeline" width="100%"></p>
+<p align="center"><img src="docs/assets/how_it_works.svg" alt="SYNSPEQ pipeline and the four measures on ten illustrative molecules" width="100%"></p>
 Findability requires planner models and a stock. Precedent support requires the USPTO database. Residual steps require a
 purchasing catalog. The scaffold diversity measures require no additional catalog.
 
