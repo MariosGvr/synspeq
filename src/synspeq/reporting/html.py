@@ -72,7 +72,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
     if rep.get("banner"):
         parts.append('<div class="banner"><b>Not fully assessed</b><ul>' + "".join(f"<li>{E(b)}</li>" for b in rep["banner"]) + "</ul></div>")
     if rep.get("real_queries_pending"):
-        parts.append(f'<div class="banner">{rep["real_queries_pending"]:,} intermediates have not been looked up in REAL yet; Pillar 3 is reported as a bound until '
+        parts.append(f'<div class="banner">{rep["real_queries_pending"]:,} intermediates have not been looked up in REAL yet; residual steps are reported as a bound until '
                      f'<code>synspeq real-scan</code> and <code>real-merge</code> have run.</div>')
 
     # input audit
@@ -90,20 +90,20 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
     if p1:
         c = p1["counts"]
         n = p1["n_distinct"]
-        parts.append("<h2>Pillar 1: route recovery</h2>")
-        parts.append('<div class="cards">' + card(pct(p1["find_ge1"]), "Find ≥1 (found, needs a reaction)") + card(pct(p1["find"]), "Find (found)") +
-                     card(pct(p1["direct_purchase_share_of_found"]), "direct purchase, share of found") + card(pct(p1["find_raw"]), "Find over raw rows") +
+        parts.append("<h2>Findability</h2>")
+        parts.append('<div class="cards">' + card(pct(p1["find_ge1"]), "Solved ≥1 (needs at least one reaction)") + card(pct(p1["find"]), "Solved") +
+                     card(pct(p1["direct_purchase_share_of_found"]), "directly purchasable, share of solved") + card(pct(p1["find_raw"]), "Solved over all records") +
                      card(pct(p1["non_stock_route_rate"]), "route rate among non-stock molecules") + "</div>")
         parts.append(stacked_bar([("direct purchase", c["direct_purchase"], "--c2"), ("routed", c["routed"], "--c1"),
                                   ("found, no saved route", c["found_no_saved_route"], "--c3"), ("unresolved", c["unresolved"], "--c4"),
                                   ("execution error", c["execution_error"], "--c5"), ("pending", c["pending"], "--c6")], n))
         if not p1["complete"]:
             parts.append('<p class="note"><b>Incomplete population:</b> pending or errored molecules are shown; the partition does not cover every molecule.</p>')
-        parts.append('<p class="note">Unresolved = not recovered under these settings (a search that ended without a route), not proven unsynthesisable.</p>')
+        parts.append('<p class="note">Unresolved = not found under these settings (a search that ended without a route), not proven unsynthesizable.</p>')
 
     p2 = rep.get("P2")
     if p2:
-        parts.append("<h2>Pillar 2: chemical support (retrieved precedent)</h2>")
+        parts.append("<h2>Precedent support (retrieved precedent)</h2>")
         rows = []
         for lab, k in (("primary route", "primary"), ("any saved route", "any_saved"), ("primary, identical records excluded", "primary_analogue"), ("any saved, identical records excluded", "any_saved_analogue")):
             b = p2[k]
@@ -116,7 +116,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
 
     p3 = rep.get("P3")
     if p3 and p3.get("n_routed"):
-        parts.append("<h2>Pillar 3: deliverability</h2>")
+        parts.append("<h2>Residual steps</h2>")
         t = p3["tiers_available"]
         od_status = p3.get("needs_on_demand_status", "value")
         od_card = ("n/a" if p3.get("needs_on_demand") is None else
@@ -124,10 +124,10 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
         parts.append('<div class="cards">' + card(num(p3["median_residual_steps"]), "median residual steps" + (" (upper bound)" if p3.get("frontier_status") == "bound" else "")) +
                      card(num(p3["median_route_steps"]), "median route steps") +
                      card(pct(p3["frontier_found"]), "route has a purchasable intermediate" + (" (lower bound)" if p3.get("frontier_status") == "bound" else "")) +
-                     card(od_card, "frontier is on-demand (REAL)" + (" (not assessed: needs both tiers)" if od_status == "not_assessed" else "")) + "</div>")
-        used = " and ".join(x for x, ok in (("stocked catalogue", t["stocked"]), ("on-demand catalogue", t["on_demand"])) if ok)
+                     card(od_card, "first purchasable intermediate is make-on-demand (REAL)" + (" (not assessed: needs both tiers)" if od_status == "not_assessed" else "")) + "</div>")
+        used = " and ".join(x for x, ok in (("stocked catalog", t["stocked"]), ("on-demand catalog", t["on_demand"])) if ok)
         parts.append(f'<p class="note">Frontier defined by: {E(used)}. Strict matching (canonical isomeric SMILES). '
-                     "'None' means not in the configured catalogues, not unbuyable anywhere. Describes routed molecules only.</p>")
+                     "'None' means not in the configured catalogs, not unbuyable anywhere. Describes routed molecules only.</p>")
         if p3.get("bound"):
             parts.append(f'<div class="banner">{E(p3["bound"])}</div>')
         d = p3.get("residual_steps_counts")
@@ -136,7 +136,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
 
     p4 = rep.get("P4")
     if p4:
-        parts.append("<h2>Pillar 4: coverage</h2>")
+        parts.append("<h2>Scaffold diversity</h2>")
         rows = []
         for lab, k in (("routed molecules", "routed"), ("all distinct molecules", "all_distinct")):
             b = p4[k]
@@ -146,7 +146,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
                          "n/a" if b["csr_auc"] is None else f"{b['csr_auc']:.3f}", "n/a" if b.get("reference_affinity") is None else f"{b['reference_affinity']:.3f}"])
         parts.append(table(["set", "molecules", "acyclic", "scaffolds", "unique ratio", "N50", f"N50 ({p4['routed']['subsample_n']:,}-subsample)", "CSR-AUC", "reference affinity"], rows))
         parts.append('<p class="note">Generic Bemis–Murcko scaffolds; acyclic molecules are excluded from scaffold statistics. A small N50 means collapse onto few cores. '
-                     "The subsample N50 is only reported for sets at least as large as the subsample. Coverage on the routed set reflects which molecules were findable.</p>")
+                     "The subsample N50 is only reported for sets at least as large as the subsample. Scaffold diversity on the routed set reflects which molecules were found.</p>")
 
     res = rep.get("resources", {})
     if res:
@@ -158,7 +158,7 @@ def render_html(rep: dict, out_path: str, title: str = "SYNSPEQ report") -> str:
                  "<li>Retrieved precedent evidence is not experimental feasibility; no qualifying precedent means support was not retrieved.</li>"
                  "<li>0.6412 is a similarity cutoff chosen on a calibration set, not a probability. The reaction database is shared with the planner's training data.</li>"
                  "<li>Results are comparable only within one stock and one set of planner settings.</li>"
-                 "<li>Catalogue membership is a vendor-listed snapshot, not a live quote.</li></ul>")
+                 "<li>Catalog membership is a vendor-listed snapshot, not a live quote.</li></ul>")
     html = f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{E(title)}</title><style>{CSS}</style></head><body><main>{"".join(parts)}</main></body></html>'
     with open(out_path, "w", encoding="utf-8") as fh:
         fh.write(html)

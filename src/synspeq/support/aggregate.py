@@ -1,4 +1,4 @@
-"""Pillar 2 aggregation (pure functions; no chemistry dependencies).
+"""Precedent support aggregation (pure functions; no chemistry dependencies).
 
 Reaction supported  : the best Tanimoto of MACCS-key PRESENCE among database records sharing the query's broad
                       Rxn-INSIGHT tag (TAG2) is >= THRESHOLD. THRESHOLD = 0.6412 is a similarity cutoff chosen on the

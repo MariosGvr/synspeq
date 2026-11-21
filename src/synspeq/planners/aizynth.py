@@ -57,7 +57,7 @@ def build_config(models_config: str, stock_files: Dict[str, str], out_path: str)
 
 
 def stock_from_smiles(smiles_files: List[str], out_hdf5: str, source: str = "plain") -> str:
-    """Convert plain SMILES catalogues (one SMILES per line) to an AiZynthFinder HDF5 stock (the `smiles2stock` tool)."""
+    """Convert plain SMILES catalogs (one SMILES per line) to an AiZynthFinder HDF5 stock (the `smiles2stock` tool)."""
     from aizynthfinder.tools import make_stock
     make_stock.main(["--files", *smiles_files, "--output", out_hdf5, "--source", source])
     return out_hdf5

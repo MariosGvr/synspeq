@@ -1,7 +1,7 @@
-"""Union planner stock from several catalogues.
+"""Union planner stock from several catalogs.
 
 Every member is reduced to InChIKeys (AiZynthFinder's stock key): HDF5 stocks are read as they are, SMILES/SDF/CSV
-catalogues are parsed with RDKit. Records RDKit cannot parse are counted, never dropped silently. The result is one
+catalogs are parsed with RDKit. Records RDKit cannot parse are counted, never dropped silently. The result is one
 HDF5 (or, when PyTables is missing, a plain text file with one key per line, which AiZynthFinder also reads) plus a
 manifest with member counts, overlaps and licence flags. The union is for the user's own runs: it is marked
 redistributable only if every member is.

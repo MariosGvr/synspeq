@@ -2,7 +2,7 @@
 
 resolve(config, manifest, store, mode) -> Resolution with
   * a state per resource: ready | partial | not_requested | missing | invalid
-  * a status per pillar:  value | bound | not_assessed | unavailable | blocked   (+ sub-metrics for P3, P4)
+  * a status per measure:  value | bound | not_assessed | unavailable | blocked   (+ sub-metrics for P3, P4)
   * exit_code 2 when anything is blocked, else 0, and the messages/banner a report must print.
 Rules implemented: R1 unspecified is not an error; R2 requested-but-absent is an error with the exact fix (skip
 turns it into 'unavailable'); R3 a user-named stock is never replaced by the default; R4 absence is never zero;
@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
+from ..config import MEASURE_NAMES
 from .manifest import Manifest
 from .store import Store, validate
 
@@ -51,10 +52,10 @@ class Resolution:
         out = []
         for p, m in self.metrics.items():
             if m.status in ("not_assessed", "unavailable", "blocked", "bound"):
-                out.append(f"{p}: {m.status}" + (f" ({m.reason})" if m.reason else ""))
+                out.append(f"{MEASURE_NAMES.get(p, p)}: {m.status}" + (f" ({m.reason})" if m.reason else ""))
             for s, d in m.sub.items():
                 if d["status"] != "value":
-                    out.append(f"{p}.{s}: {d['status']}" + (f" ({d['reason']})" if d.get("reason") else ""))
+                    out.append(f"{MEASURE_NAMES.get(p, p)}.{s}: {d['status']}" + (f" ({d['reason']})" if d.get("reason") else ""))
         return out
 
 
@@ -98,8 +99,8 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
         raise ValueError(f"planner_stock lists resources that cannot be a planner stock: {sorted(bad_stock)}")
 
     def prov(rid: str) -> List[str]:
-        """Capabilities a resource provides in THIS run. Dual-role catalogues (Enamine building blocks) are a purchasing
-        catalogue unless the user lists them under planner_stock."""
+        """Capabilities a resource provides in THIS run. Dual-role catalogs (Enamine building blocks) are a purchasing
+        catalog unless the user lists them under planner_stock."""
         return list(R[rid].provides) + (list(R[rid].optional_provides) if rid in as_stock else [])
 
     requested: Dict[str, str] = {}
@@ -154,7 +155,7 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
 
     # ---- P1
     if "P1" not in pillars:
-        metrics["P1"] = MetricStatus("P1", "not_assessed", "pillar not selected")
+        metrics["P1"] = MetricStatus("P1", "not_assessed", "measure not selected")
     elif mode == "replay":
         metrics["P1"] = MetricStatus("P1", "value", "cached planner records; no stock or models needed")
     else:
@@ -176,7 +177,7 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
 
     # ---- P2
     if "P2" not in pillars:
-        metrics["P2"] = MetricStatus("P2", "not_assessed", "pillar not selected")
+        metrics["P2"] = MetricStatus("P2", "not_assessed", "measure not selected")
     elif DB_CAP in have:
         metrics["P2"] = MetricStatus("P2", "value")
     else:
@@ -186,16 +187,16 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
 
     # ---- P3
     if "P3" not in pillars:
-        metrics["P3"] = MetricStatus("P3", "not_assessed", "pillar not selected")
+        metrics["P3"] = MetricStatus("P3", "not_assessed", "measure not selected")
     else:
         bs, od = STOCKED in have, ONDEMAND in have
         asked = [s for s in states.values() if s.requested_by and {STOCKED, ONDEMAND} & set(prov(s.id)) and s.state in ("missing", "invalid")]
         asked_purchasing = [s for s in asked if s.requested_by in ("user", "profile")]
         sub = {}
         if bs or od:
-            which = ("stocked catalogue" if bs else "") + (" + " if bs and od else "") + ("on-demand catalogue" if od else "")
+            which = ("stocked catalog" if bs else "") + (" + " if bs and od else "") + ("on-demand catalog" if od else "")
             top = "bound" if ({STOCKED, ONDEMAND} & partial_caps) else "value"
-            sub["residual_steps_and_frontier"] = dict(status=top, reason=f"frontier defined by: {which}" + ("; partial catalogue coverage -> bounds" if top == "bound" else ""))
+            sub["residual_steps_and_frontier"] = dict(status=top, reason=f"frontier defined by: {which}" + ("; partial catalog coverage -> bounds" if top == "bound" else ""))
             if bs and od:
                 sub["real_needed"] = dict(status="bound" if ONDEMAND in partial_caps else "value", reason="partial on-demand coverage: lower bound" if ONDEMAND in partial_caps else "")
             else:
@@ -206,27 +207,27 @@ def resolve(cfg: dict, manifest: Manifest, store: Store, mode: str = "plan") -> 
                     top = "blocked"
             metrics["P3"] = MetricStatus("P3", top, sub["residual_steps_and_frontier"]["reason"], sub)
             if top == "blocked":
-                metrics["P3"].reason = "a requested catalogue is missing"
+                metrics["P3"].reason = "a requested catalog is missing"
         elif asked_purchasing:
             for s in asked_purchasing:
                 note("error", "P3", f"{s.id}: {s.reason}", s.fix)
-            metrics["P3"] = MetricStatus("P3", "unavailable" if skip else "blocked", "requested purchasing catalogue missing")
+            metrics["P3"] = MetricStatus("P3", "unavailable" if skip else "blocked", "requested purchasing catalog missing")
         else:
-            metrics["P3"] = MetricStatus("P3", "not_assessed", "no purchasing catalogue configured (REAL / Enamine building blocks); planner-stock hits are already leaves, so the default stock alone adds no frontier information")
+            metrics["P3"] = MetricStatus("P3", "not_assessed", "no purchasing catalog configured (REAL / Enamine building blocks); planner-stock hits are already leaves, so the default stock alone adds no frontier information")
 
     # ---- P4
     if "P4" not in pillars:
-        metrics["P4"] = MetricStatus("P4", "not_assessed", "pillar not selected")
+        metrics["P4"] = MetricStatus("P4", "not_assessed", "measure not selected")
     else:
         sub = {}
         if SCAFFOLD_REF in have:
-            sub["enamine_affinity"] = dict(status="bound" if SCAFFOLD_REF in partial_caps else "value", reason="partial reference catalogue" if SCAFFOLD_REF in partial_caps else "")
+            sub["enamine_affinity"] = dict(status="bound" if SCAFFOLD_REF in partial_caps else "value", reason="partial reference catalog" if SCAFFOLD_REF in partial_caps else "")
         else:
             asked = [s for s in states.values() if s.requested_by in ("user", "profile") and s.state in ("missing", "invalid") and SCAFFOLD_REF in prov(s.id)]
             for s in asked:
                 note("warning", "P4", f"{s.id}: {s.reason}", s.fix)
             sub["enamine_affinity"] = dict(status="unavailable" if (asked and skip) else ("blocked" if asked else "not_assessed"),
-                                           reason="requested catalogue missing" if asked else "no reference catalogue configured")
+                                           reason="requested catalog missing" if asked else "no reference catalog configured")
         top = "blocked" if sub["enamine_affinity"]["status"] == "blocked" else "value"
         metrics["P4"] = MetricStatus("P4", top, "", sub)
 

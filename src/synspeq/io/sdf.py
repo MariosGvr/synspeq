@@ -28,7 +28,7 @@ def _blocks(fh) -> Iterator[str]:
 
 
 def iter_sdf_blocks(path: str) -> Iterator[str]:
-    """Raw text of every SDF record (also a last record without '$$$$'). Shared by the molecule reader, the catalogue
+    """Raw text of every SDF record (also a last record without '$$$$'). Shared by the molecule reader, the catalog
     reader and resource validation so that all three see the same records."""
     with _open_text(path) as fh:
         yield from _blocks(fh)

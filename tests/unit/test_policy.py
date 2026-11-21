@@ -39,7 +39,7 @@ class UseCases(PolicyBase):
         self.assertEqual(r.metrics["P2"].status, "value")
         self.assertEqual(r.metrics["P3"].status, "not_assessed")          # R1: unspecified is not an error
         self.assertEqual(r.metrics["P4"].sub["enamine_affinity"]["status"], "not_assessed")
-        self.assertTrue(any("P3: not_assessed" in b for b in r.banner))     # never silent
+        self.assertTrue(any("residual steps: not_assessed" in b for b in r.banner))     # never silent
 
     def test_uc2_real_not_mentioned_but_bb_present(self):
         self.core(); self.make("enamine_bb", fmt="smiles")

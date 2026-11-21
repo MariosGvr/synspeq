@@ -1,6 +1,6 @@
-"""Pillar 3 purchasing frontier on the primary route (the planner's first all-in-stock tree).
+"""Purchasing frontier of residual steps on the primary route (the planner's first all-in-stock tree).
 
-Walk from the target: at each molecule, if the catalogue lists it, stop (its subtree is bought) and record the tier;
+Walk from the target: at each molecule, if the catalog lists it, stop (its subtree is bought) and record the tier;
 otherwise expand its reaction and walk its precursors. Residual steps = reactions left above the frontier.
 Frontier tier of the route: 'on_demand' if any frontier molecule is make-on-demand only, else 'in_stock' if any is
 stocked, else 'none'. Counts and depths use the retained reaction nodes of the pruned tree.
@@ -51,7 +51,7 @@ def walk_frontier(tree: dict, cat: Catalogue) -> Frontier:
             return 0, 0
         kids = node.get("children")
         if not kids:
-            return 0, 0                      # terminal stock leaf of the planner, not listed in the purchasing catalogue
+            return 0, 0                      # terminal stock leaf of the planner, not listed in the purchasing catalog
         if st == "unknown":
             unknown.add(node.get("smiles", ""))
         tot, dep = 1, 0

@@ -1,4 +1,4 @@
-"""Pillar 4 building blocks: generic Bemis-Murcko scaffolds, N50, CSR-AUC, fixed-size subsample N50, scaffold prior.
+"""Building blocks of scaffold diversity: generic Bemis-Murcko scaffolds, N50, CSR-AUC, fixed-size subsample N50, scaffold prior.
 
 Acyclic molecules have an empty scaffold: they are excluded from scaffold statistics and counted separately.
 N50 = fewest scaffolds that cover at least half of the (cyclic) molecules. CSR-AUC = mean cumulative coverage over
@@ -57,7 +57,7 @@ def subsample_n50(scaffolds: Sequence[Optional[str]], n: int = 3000, seeds: Sequ
 
 
 def scaffold_prior(smiles: Iterable[str]) -> Dict[str, int]:
-    """Scaffold frequency prior from a sample of reference-catalogue SMILES (e.g. a random draw from REAL parts)."""
+    """Scaffold frequency prior from a sample of reference-catalog SMILES (e.g. a random draw from REAL parts)."""
     c: Counter = Counter()
     for s in smiles:
         g = generic_scaffold(s)

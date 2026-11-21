@@ -1,4 +1,4 @@
-"""Pillar 4: coverage (model level), on the routed molecules and, beside it, on all distinct valid molecules."""
+"""Scaffold diversity (model level), on the routed molecules and, beside it, on all distinct valid molecules."""
 from __future__ import annotations
 from statistics import median
 from typing import Dict, Optional
@@ -33,4 +33,4 @@ def compute_p4(pop: Population, outcomes: Dict[str, object], prior: Optional[dic
                 routed=_block(routed, prior, n_sub),
                 all_distinct=_block(pop.molecules, prior, n_sub),
                 scope="routed = found and needing at least one reaction",
-                note="subsample N50 is only reported when the set has at least the subsample size; 'reference_affinity' needs a scaffold prior from a reference catalogue")
+                note="subsample N50 is only reported when the set has at least the subsample size; 'reference_affinity' needs a scaffold prior from a reference catalog")

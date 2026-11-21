@@ -72,7 +72,7 @@ class ProvenanceBoundaries(Tmp):
         store.register('enamine_real', self.p('B'), fmt='smiles_or_sdf_directory')
         args = ['--data-dir', self.p('store'), 'evaluate', self.p('m.sdf'),
                 '--routes-dir', self.p('routes'), '--resources', 'enamine_real',
-                '--pillars', 'P1,P3', '--out', self.p('out')]
+                '--measures', 'findability,residual-steps', '--out', self.p('out')]
         err = io.StringIO()
         with contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
             rc = main(args + ['--real-lookup', self.p('lk')])

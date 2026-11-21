@@ -1,7 +1,7 @@
 """Sharded REAL membership scan with completion tracking.
 
-A shard file starts with a header line `#SYNSPEQ-REAL-SCAN {json}` that identifies the query set (sha256), the catalogue
-(name, size and sha256 of every file the shard scanned; the sha256 of the sorted listing for the whole catalogue), the shard
+A shard file starts with a header line `#SYNSPEQ-REAL-SCAN {json}` that identifies the query set (sha256), the catalog
+(name, size and sha256 of every file the shard scanned; the sha256 of the sorted listing for the whole catalog), the shard
 number, the number of shards, and the number and sha256 of the hit lines that follow, so that a truncated or edited shard file
 is detected. Hit lines are `smiles<TAB>file`.
 
@@ -29,7 +29,7 @@ def queries_sha256(queries: List[str]) -> str:
 
 
 def catalogue_id(files: List[str]) -> str:
-    """Cheap identity of a catalogue: names and sizes. Content is checked per file (`file_sha256`) in the shard headers."""
+    """Cheap identity of a catalog: names and sizes. Content is checked per file (`file_sha256`) in the shard headers."""
     return hashlib.sha256(json.dumps([(os.path.basename(f), os.path.getsize(f)) for f in files]).encode()).hexdigest()
 
 
@@ -44,7 +44,7 @@ def scan_shard(queries_file: str, real_dir: str, shard: int, n_shards: int, out:
     import rdkit
     files = catalogue_files(real_dir)
     if not files:
-        raise ValueError(f"{real_dir}: no catalogue files")
+        raise ValueError(f"{real_dir}: no catalog files")
     queries = read_queries(queries_file)
     mine = files[shard::n_shards]
     hits = scan_membership(set(queries), mine, smiles_col=smiles_col, already_canonical=not recanonicalise)
@@ -100,7 +100,7 @@ def merge_shards(queries_file: str, hit_files: List[str], out_dir: str) -> dict:
     for m in metas:
         for name, v in m.get("files", {}).items():
             if name in file_map and file_map[name] != v:
-                raise ValueError(f"catalogue file {name} has different content in two shard files")
+                raise ValueError(f"catalog file {name} has different content in two shard files")
             file_map[name] = v
     for m in metas:
         if not isinstance(m.get("files"), dict) or len(m["files"]) != m.get("n_files_in_shard"):
@@ -111,7 +111,7 @@ def merge_shards(queries_file: str, hit_files: List[str], out_dir: str) -> dict:
     dup = [s for s in present if sum(1 for m in metas if m["shard"] == s) > 1]
     complete = present == list(range(n))
     if complete and len(file_map) != metas[0]["n_catalogue_files"]:
-        raise ValueError("complete scan does not cover every catalogue file")
+        raise ValueError("complete scan does not cover every catalog file")
     lk = RealLookup.load(out_dir) if os.path.isdir(out_dir) else RealLookup()
     prev = {}
     mp = os.path.join(out_dir, "meta.json")
@@ -124,10 +124,10 @@ def merge_shards(queries_file: str, hit_files: List[str], out_dir: str) -> dict:
                     raise ValueError(f"lookup matching policy changed ({key}); use a new --out folder")
         old_cat = {s.get("catalogue_sha256") for s in prev.get("scans", [])}
         if old_cat and metas[0]["catalogue_sha256"] not in old_cat:
-            raise ValueError(f"{out_dir} already holds lookups from a different catalogue; use a new --out folder")
-        for name, v in file_map.items():           # same names and sizes but other content is a different catalogue
+            raise ValueError(f"{out_dir} already holds lookups from a different catalog; use a new --out folder")
+        for name, v in file_map.items():           # same names and sizes but other content is a different catalog
             if name in prev.get("files", {}) and prev["files"][name] != v:
-                raise ValueError(f"{out_dir} was built from another version of catalogue file {name} (content differs); "
+                raise ValueError(f"{out_dir} was built from another version of catalog file {name} (content differs); "
                                  "use a new --out folder")
     unknown_hits = hits - set(queries)
     if unknown_hits:
@@ -149,7 +149,7 @@ def merge_shards(queries_file: str, hit_files: List[str], out_dir: str) -> dict:
 
 
 def check_lookup_matches_catalogue(lookup_dir: str, catalogue_path: str) -> None:
-    """Refuse a lookup that was not built from the catalogue that is configured now.
+    """Refuse a lookup that was not built from the catalog that is configured now.
 
     File names and sizes are compared first, then the content of every recorded shard file is checked against the SHA-256
     recorded at scan time. Hashing a full REAL copy is slow, so a file whose size and modification time are unchanged since
@@ -157,7 +157,7 @@ def check_lookup_matches_catalogue(lookup_dir: str, catalogue_path: str) -> None
     Unscanned shards may stay unknown; an unverified lookup never yields measured values."""
     mp = os.path.join(lookup_dir, "meta.json")
     if not os.path.exists(mp):
-        raise ValueError(f"{lookup_dir} has no meta.json: it was not written by `synspeq real-merge`, so it cannot be tied to a catalogue")
+        raise ValueError(f"{lookup_dir} has no meta.json: it was not written by `synspeq real-merge`, so it cannot be tied to a catalog")
     with open(mp) as fh:
         meta = json.load(fh)
     scans = meta.get("scans", [])
@@ -167,17 +167,17 @@ def check_lookup_matches_catalogue(lookup_dir: str, catalogue_path: str) -> None
     now = catalogue_id(files)
     bad = [s for s in scans if s.get("catalogue_sha256") != now]
     if bad:
-        raise ValueError(f"{lookup_dir} was built from a different catalogue than {catalogue_path} (file names or sizes differ); "
-                         "re-run `real-scan` and `real-merge` for the configured catalogue")
+        raise ValueError(f"{lookup_dir} was built from a different catalog than {catalogue_path} (file names or sizes differ); "
+                         "re-run `real-scan` and `real-merge` for the configured catalog")
     from ..hashing import file_sha256
     rec = meta.get("files")
     if not isinstance(rec, dict) or not rec:
-        raise ValueError(f"{lookup_dir}: missing catalogue content provenance; rebuild the lookup")
+        raise ValueError(f"{lookup_dir}: missing catalog content provenance; rebuild the lookup")
     current = {os.path.basename(f): f for f in files}
     if set(rec) - set(current):
-        raise ValueError("lookup refers to files absent from the configured catalogue")
+        raise ValueError("lookup refers to files absent from the configured catalog")
     if any(s.get("complete") for s in scans) and set(rec) != set(current):
-        raise ValueError("complete lookup lacks content provenance for some catalogue files")
+        raise ValueError("complete lookup lacks content provenance for some catalog files")
     cache_path = os.path.join(lookup_dir, ".verified.json")
     try:
         with open(cache_path) as fh:
@@ -189,17 +189,17 @@ def check_lookup_matches_catalogue(lookup_dir: str, catalogue_path: str) -> None
     changed = False
     for name, identity in rec.items():
         if not isinstance(identity, list) or len(identity) != 2:
-            raise ValueError(f"invalid catalogue content provenance for {name}")
+            raise ValueError(f"invalid catalog content provenance for {name}")
         st = os.stat(current[name])
         if st.st_size != identity[0]:
-            raise ValueError(f"catalogue file {name} differs in content from the version this lookup was built from")
+            raise ValueError(f"catalog file {name} differs in content from the version this lookup was built from")
         where = os.path.realpath(current[name])
         seen = cache.get(name)
         if (isinstance(seen, list) and len(seen) == 4 and seen[0] == st.st_size and seen[1] == st.st_mtime_ns
                 and seen[2] == identity[1] and seen[3] == where):
             continue
         if file_sha256(current[name]) != identity[1]:
-            raise ValueError(f"catalogue file {name} differs in content from the version this lookup was built from")
+            raise ValueError(f"catalog file {name} differs in content from the version this lookup was built from")
         cache[name] = [st.st_size, st.st_mtime_ns, identity[1], where]
         changed = True
     if changed:

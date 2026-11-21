@@ -1,4 +1,4 @@
-"""Query preprocessing and retrieval for Pillar 2 (needs `rxn-insight` and `rxnmapper`, i.e. extras 'support').
+"""Query preprocessing and retrieval for precedent support (needs `rxn-insight` and `rxnmapper`, i.e. extras 'support').
 
 prepare(): Rxn-INSIGHT classification of the forward reaction string (atom mapping by RXNMapper) -> TAG, broad TAG2,
 sanitised reaction, identity keys. Statuses: ok | unparseable_smiles | preprocess_error | mapping_failed_silent |
@@ -43,7 +43,7 @@ class Preprocessor:
             from rxn_insight.reaction import Reaction
             from rxnmapper import RXNMapper
         except ImportError as e:
-            raise RuntimeError("Pillar 2 needs the 'support' extras: pip install rxn-insight rxnmapper (see docs/DATA_RESOURCES_GUIDE.md)") from e
+            raise RuntimeError("Precedent support needs the 'support' extras: pip install rxn-insight rxnmapper (see docs/DATA_RESOURCES_GUIDE.md)") from e
         self._Reaction = Reaction
         self.mapper = RXNMapper()
         self.smirks = curate_smirks(pd.read_json(files("rxn_insight.data").joinpath("smirks.json"), orient="records", lines=True))

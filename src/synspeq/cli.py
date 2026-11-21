@@ -14,7 +14,7 @@ import subprocess
 import sys
 from typing import Optional
 from . import __version__
-from .config import load_config
+from .config import load_config, MEASURE_NAMES
 from .io import read_sdf, read_table
 from .metrics import compute_p1
 from .populations import make_population
@@ -50,9 +50,21 @@ def _config_and_store(a, extra=None):
     return cfg, Store(a.data_dir or cfg.get("data_dir"))
 
 
+def _scope_name(scope):
+    """The measure's name for a message scope such as P2 or P3.real_needed."""
+    head, dot, rest = str(scope).partition(".")
+    return MEASURE_NAMES.get(head, head) + dot + rest
+
+
+def _add_measures(parser):
+    parser.add_argument("--measures", dest="pillars", default=None, metavar="MEASURES",
+                        help="comma list of findability, precedent-support, residual-steps, scaffold-diversity (default: all)")
+    parser.add_argument("--pillars", dest="pillars", default=None, help=argparse.SUPPRESS)    # older name of --measures
+
+
 def _print_messages(res):
     for m in res.messages:
-        print(f"[{m['level']}] {m['scope']}: {m['text']}" + (f"\n        fix: {m['fix']}" if m.get("fix") else ""), file=sys.stderr)
+        print(f"[{m['level']}] {_scope_name(m['scope'])}: {m['text']}" + (f"\n        fix: {m['fix']}" if m.get("fix") else ""), file=sys.stderr)
 
 
 def _read_any(path: str, pocket_field=None, smiles_col="smiles", name_col="mol_id"):
@@ -168,7 +180,7 @@ def cmd_data(a) -> int:
         flags = {rid: man.resources[rid].flags for rid in ids if rid in man.resources}
         out = build_union(members, a.out, flags)
         store.register("user_union_stock", out["file"], fmt=None, terms_acknowledged=True)
-        print(f"union of {len(ids)} catalogues: {out['n_unique_inchikeys']:,} unique InChIKeys -> {out['file']}")
+        print(f"union of {len(ids)} catalogs: {out['n_unique_inchikeys']:,} unique InChIKeys -> {out['file']}")
         for rid, info in out["members"].items():
             print(f"  {rid:18} records {info['n_records']:>10,}  unparseable {info['n_unparseable']:>7,}  unique {info['n_unique_keys']:>10,}  new {info['new_keys_added']:>10,}")
         if out["noncommercial"] or out["sharealike"]:
@@ -241,7 +253,7 @@ def cmd_p1(a) -> int:
     c = res["counts"]
     print(f"{pop.label}: {res['n_input_records']} records, {res['n_invalid_records']} invalid, {res['n_distinct']} distinct, duplicate rate {_fmt_pct(res['duplicate_rate'])}")
     print(f"  direct {c['direct_purchase']}  routed {c['routed']}  found-no-saved-route {c['found_no_saved_route']}  unresolved {c['unresolved']}  error {c['execution_error']}  pending {c['pending']}")
-    print(f"  Find {_fmt_pct(res['find'])}  Find>=1 {_fmt_pct(res['find_ge1'])}  direct share of found {_fmt_pct(res['direct_purchase_share_of_found'])}  Find(raw) {_fmt_pct(res['find_raw'])}  complete={res['complete']}")
+    print(f"  Solved {_fmt_pct(res['find'])}  Solved>=1 {_fmt_pct(res['find_ge1'])}  directly purchasable share of solved {_fmt_pct(res['direct_purchase_share_of_found'])}  Solved (all records) {_fmt_pct(res['find_raw'])}  complete={res['complete']}")
     return 0
 
 
@@ -271,25 +283,25 @@ def cmd_evaluate(a) -> int:
         print("NOTE", line)
     p1 = rep.get("P1")
     if p1:
-        print(f"P1  Find {_fmt_pct(p1['find'])}  Find>=1 {_fmt_pct(p1['find_ge1'])}  distinct {p1['n_distinct']}  complete={p1['complete']}")
+        print(f"Findability  Solved {_fmt_pct(p1['find'])}  Solved>=1 {_fmt_pct(p1['find_ge1'])}  distinct {p1['n_distinct']}  complete={p1['complete']}")
     p2 = rep.get("P2")
     if p2:
-        print(f"P2  supported (primary) {_fmt_pct(p2['primary']['conditional'])} of routed, (any saved) {_fmt_pct(p2['any_saved']['conditional'])}")
+        print(f"Precedent support  primary route {_fmt_pct(p2['primary']['conditional'])} of routed, any saved route {_fmt_pct(p2['any_saved']['conditional'])}")
     p3 = rep.get("P3")
     if p3 and p3.get("n_routed"):
         od = p3.get("needs_on_demand")
         od_txt = "n/a (needs both tiers)" if od is None else (("at least " if p3.get("needs_on_demand_status") == "bound" else "") + _fmt_pct(od))
         bnd = " (bound: some intermediates were never looked up in REAL)" if p3.get("frontier_status") == "bound" else ""
-        print(f"P3  median residual steps {p3['median_residual_steps']}  frontier found {_fmt_pct(p3['frontier_found'])}  needs on-demand {od_txt}{bnd}")
+        print(f"Residual steps  median {p3['median_residual_steps']}  frontier found {_fmt_pct(p3['frontier_found'])}  on demand {od_txt}{bnd}")
     p4 = rep.get("P4")
     if p4:
         b = p4["routed"]
         if not b["n_molecules"]:
-            print("P4  no routed molecules")
+            print("Scaffold diversity  no routed molecules")
         elif b["n50"] is None:
-            print(f"P4  N50 n/a  CSR-AUC n/a  (no cyclic molecule among {b['n_molecules']} routed molecules)")
+            print(f"Scaffold diversity  N50 n/a  CSR-AUC n/a  (no cyclic molecule among {b['n_molecules']} routed molecules)")
         else:
-            print(f"P4  N50 {b['n50']}  unique scaffold ratio {b['unique_scaffold_ratio']:.3f}  CSR-AUC {b['csr_auc']:.3f}")
+            print(f"Scaffold diversity  N50 {b['n50']}  unique scaffold ratio {b['unique_scaffold_ratio']:.3f}  CSR-AUC {b['csr_auc']:.3f}")
     print(f"wrote {a.out}/report.html, report.json, molecules.csv, run_manifest.json")
     return 0
 
@@ -410,7 +422,7 @@ def cmd_real_merge(a) -> int:
 
 
 def cmd_prior(a) -> int:
-    """Scaffold prior from a random draw of rows from random catalogue files (default: 3000 parts x 100 rows)."""
+    """Scaffold prior from a random draw of rows from random catalog files (default: 3000 parts x 100 rows)."""
     import random
     from .coverage import scaffold_prior
     from .purchasing.catalogue import _iter_smiles, catalogue_files
@@ -445,12 +457,12 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("--snapshot-date", default=None)
     x.add_argument("--accept-terms", action="store_true")
     x = ds.add_parser("download"); x.add_argument("id"); x.add_argument("--dest"); x.add_argument("--accept-terms", action="store_true")
-    x = ds.add_parser("build-union", help="merge registered catalogues into one planner stock")
+    x = ds.add_parser("build-union", help="merge registered catalogs into one planner stock")
     x.add_argument("--resources", required=True, help="comma list of registered resource ids")
     x.add_argument("--out", required=True)
     x = ds.add_parser("check")
     x.add_argument("--config"); x.add_argument("--profile", default=None); x.add_argument("--on-missing", default=None, choices=["stop", "skip"])
-    x.add_argument("--pillars", default=None, help="comma list, e.g. P1,P2")
+    _add_measures(x)
     x.add_argument("--resources", default=None, help="comma list of resource ids to enable")
     x.add_argument("--planner-stock", default=None)
     x.add_argument("--mode", default="plan", choices=["plan", "replay"])
@@ -466,19 +478,19 @@ def build_parser() -> argparse.ArgumentParser:
         g.add_argument("--last", type=_pos_int, default=None, help="keep the last N rows (per pocket); N >= 1")
     v = sp.add_parser("validate", help="ingestion audit: valid/invalid records, raw and distinct counts")
     common(v); v.set_defaults(func=cmd_validate)
-    r = sp.add_parser("p1-replay", help="Pillar 1 from cached AiZynthFinder records")
+    r = sp.add_parser("p1-replay", help="findability from cached AiZynthFinder records")
     common(r); r.add_argument("--routes-dir", action="append", required=True); r.add_argument("--out", default=None)
     r.set_defaults(func=cmd_p1)
-    e = sp.add_parser("evaluate", help="all assessable pillars from cached planner records (replay mode)")
+    e = sp.add_parser("evaluate", help="all assessable measures from cached planner records (replay mode)")
     common(e)
     e.add_argument("--routes-dir", action="append", required=True)
     e.add_argument("--out", required=True)
     e.add_argument("--config"); e.add_argument("--profile", default=None); e.add_argument("--on-missing", default=None, choices=["stop", "skip"])
-    e.add_argument("--pillars", default=None)
+    _add_measures(e)
     e.add_argument("--resources", default=None, help="comma list of resource ids to enable, e.g. enamine_bb,enamine_real")
     e.add_argument("--planner-stock", default=None)
     e.add_argument("--real-lookup", default=None, help="folder with hits.txt / queried.txt from `real-scan` + `real-merge`")
-    e.add_argument("--scaffold-prior", default=None, help="TSV scaffold<TAB>count from a reference catalogue sample (P4 reference affinity)")
+    e.add_argument("--scaffold-prior", default=None, help="TSV scaffold<TAB>count from a reference catalog sample (P4 reference affinity)")
     e.set_defaults(func=cmd_evaluate)
     pl = sp.add_parser("plan", help="plan with AiZynthFinder (needs the 'planner' extras, models and a stock)")
     common(pl)
@@ -493,7 +505,7 @@ def build_parser() -> argparse.ArgumentParser:
     common(rn)
     rn.add_argument("--out", required=True)
     rn.add_argument("--config"); rn.add_argument("--profile", default=None); rn.add_argument("--on-missing", default=None, choices=["stop", "skip"])
-    rn.add_argument("--pillars", default=None); rn.add_argument("--resources", default=None)
+    _add_measures(rn); rn.add_argument("--resources", default=None)
     rn.add_argument("--workers", type=_pos_int, default=1)
     rn.add_argument("--planner-stock", default=None, help="comma list of resources that form the planner stock (e.g. enamine_bb)")
     rn.add_argument("--real-lookup", default=None); rn.add_argument("--scaffold-prior", default=None)
@@ -505,10 +517,10 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("--shard", type=_nonneg_int, default=0); x.add_argument("--n-shards", type=_pos_int, default=1)
     x.add_argument("--smiles-col", default="smiles"); x.add_argument("--out", required=True)
     x.add_argument("--recanonicalise", action="store_true",
-                   help="canonicalise every catalogue SMILES with this RDKit before matching (slow; use when the catalogue was "
+                   help="canonicalise every catalog SMILES with this RDKit before matching (slow; use when the catalog was "
                         "canonicalised by a different RDKit version)")
     x.set_defaults(func=cmd_real_scan)
-    x = sp.add_parser("scaffold-prior", help="P4 reference scaffold prior: random draw of rows from random catalogue files (REAL)")
+    x = sp.add_parser("scaffold-prior", help="reference scaffold prior for scaffold diversity: random draw of rows from random catalog files (REAL)")
     x.add_argument("--real-dir", required=True); x.add_argument("--out", required=True)
     x.add_argument("--seed", type=int, required=True); x.add_argument("--n-parts", type=int, default=3000)
     x.add_argument("--rows-per-part", type=int, default=100); x.add_argument("--smiles-col", default="smiles")

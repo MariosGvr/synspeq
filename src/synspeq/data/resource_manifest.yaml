@@ -46,7 +46,7 @@ resources:
     url: https://github.com/ASKCOS/askcos-data
     format: "json_or_csv_with_smiles"
     cite: "ASKCOS / MLPDS Consortium (askcos-data)"
-    terms: "Data and models CC BY-NC-SA 4.0 (non-commercial, share-alike); underlying vendor catalogue terms not stated"
+    terms: "Data and models CC BY-NC-SA 4.0 (non-commercial, share-alike); underlying vendor catalog terms not stated"
     warn: "Non-commercial use only; a merged union containing it inherits the share-alike condition."
     flags: {noncommercial: true, sharealike: true, redistributable: false}
     provides: [planner_stock]
@@ -56,10 +56,10 @@ resources:
     role: [planner_stock, purchasing_catalogue]
     access: public_download
     automated: false
-    get: "Open the Enamine building-blocks catalogue page, section 'Download SD files', and save the 'Global Stock' SDF. Then: `synspeq data import enamine_bb <file.sdf>`."
+    get: "Open the Enamine building-blocks catalog page, section 'Download SD files', and save the 'Global Stock' SDF. Then: `synspeq data import enamine_bb <file.sdf>`."
     url: https://enamine.net/building-blocks/building-blocks-catalog
     format: "sdf"
-    terms: "Enamine Terms of use apply (https://enamine.net/terms-of-use): catalogue for information/purchasing; no redistribution; restrictions on use of Enamine Data in computational systems and on sharing derived subsets"
+    terms: "Enamine Terms of use apply (https://enamine.net/terms-of-use): catalog for information/purchasing; no redistribution; restrictions on use of Enamine Data in computational systems and on sharing derived subsets"
     warn: "You are responsible for confirming that your use is permitted. SYNSPEQ never uploads or shares the file or indexes built from it."
     flags: {redistributable: false}
     provides: [purchasing_stocked_tier]
@@ -78,7 +78,7 @@ resources:
     provides: [planner_stock]
     if_missing: {not_requested: "ignored", requested_but_absent: "abort"}
   - id: molport
-    name: "Molport catalogue"
+    name: "Molport catalog"
     role: planner_stock
     access: registration
     automated: false
@@ -86,7 +86,7 @@ resources:
     url: https://blog.molport.com/database/ftp-database-download/
     format: "sdf_or_smiles"
     terms: "Registered users; Molport's open releases are CC BY-NC 4.0 (internal, non-commercial). Read your download terms."
-    warn: "The Molport file is the full catalogue, not restricted to in-stock building blocks."
+    warn: "The Molport file is the full catalog, not restricted to in-stock building blocks."
     flags: {noncommercial: true, redistributable: false}
     provides: [planner_stock]
     if_missing: {not_requested: "ignored", requested_but_absent: "abort"}
@@ -108,7 +108,7 @@ resources:
     role: planner_stock
     access: own_licence
     automated: false
-    get: "`synspeq data build-union --resources a,b --out <dir>` merges the enabled catalogues into one InChIKey stock and registers it."
+    get: "`synspeq data build-union --resources a,b --out <dir>` merges the enabled catalogs into one InChIKey stock and registers it."
     terms: "Derived from its members: follow each member's terms before sharing it."
     warn: "Non-commercial or share-alike members make the union non-commercial or share-alike."
     provides: [planner_stock]
@@ -127,7 +127,7 @@ resources:
     terms: "CC BY 4.0"
     check: {columns: [REACTION, REF, TAG, TAG2, rxn_str_patt_fp]}
     provides: [reaction_database]
-    if_missing: {not_requested: "not allowed: Pillar 2 needs it; if the user turns Pillar 2 off in config.pillars it is ignored", requested_but_absent: "abort the Pillar 2 stage (P1, P3, P4 still run when --allow-missing)"}
+    if_missing: {not_requested: "not allowed: precedent support needs it; if the user leaves precedent support out of the configured measures it is ignored", requested_but_absent: "abort the precedent support stage (findability, residual steps and scaffold diversity still run when --allow-missing)"}
   - id: aizynth_models
     name: "AiZynthFinder USPTO expansion/filter/ring-breaker models and templates"
     role: planner_models
@@ -158,7 +158,7 @@ metric_requirements:
     requires_all: [reaction_database, P1_routes]
     on_unmet: {unrequested: not_assessed, requested_but_missing: "blocked; unavailable with --on-missing skip"}
   P3_deliverability:
-    requires_any: [purchasing_stocked_tier, purchasing_on_demand_tier]   # a catalogue beyond the planner stock is needed
+    requires_any: [purchasing_stocked_tier, purchasing_on_demand_tier]   # a catalog beyond the planner stock is needed
     sub_metrics:
       residual_steps_and_frontier_found: {requires_any: [purchasing_stocked_tier, purchasing_on_demand_tier]}
       real_needed: {requires_all: [purchasing_on_demand_tier, purchasing_stocked_tier], note: "reported as a bound while REAL lookups are incomplete"}
@@ -188,15 +188,15 @@ missing_resource_policy:
     - {id: R11, status: implemented, rule: "An imported file must contain at least one usable record (parsed with the same readers the pipeline uses) and, for HDF5 and Parquet, the expected dataset or columns; otherwise it is invalid."}
     - {id: P1, status: planned, rule: "Comparison of reports across stocks (`synspeq compare`), an aggregate-only export, and `--allow-missing`/`--role` options are not implemented."}
 use_cases:
-  - {id: UC1, case: "SDF only, no config", behaviour: "aizynth_zinc + models + USPTO database are required. If they are not installed the run stops and prints the download commands. P3 not_assessed (no purchasing catalogue); P4 reference affinity not_assessed."}
-  - {id: UC2, case: "REAL not mentioned", behaviour: "REAL-dependent metrics not_assessed; with Enamine BB present P3 uses the stocked tier only and says so."}
+  - {id: UC1, case: "SDF only, no config", behaviour: "aizynth_zinc + models + USPTO database are required. If they are not installed the run stops and prints the download commands. residual steps not_assessed (no purchasing catalog); the reference affinity of scaffold diversity not_assessed."}
+  - {id: UC2, case: "REAL not mentioned", behaviour: "REAL-dependent metrics not_assessed; with Enamine BB present residual steps use the stocked tier only and say so."}
   - {id: UC3, case: "REAL listed but the path is wrong or empty", behaviour: "R2: stops; with --on-missing skip the REAL-dependent metrics are unavailable."}
   - {id: UC4, case: "REAL scanned in part", behaviour: "R5: bounds; unscanned shards leave molecules unknown."}
   - {id: UC5, case: "Enamine BB present, REAL absent", behaviour: "frontier on the stocked tier; REAL needed not_assessed."}
   - {id: UC6, case: "REAL present, Enamine BB absent", behaviour: "frontier on the on-demand tier only; REAL needed not_assessed."}
-  - {id: UC7, case: "Own planner stock", behaviour: "`synspeq data import user_union_stock <file>` (or `build-union`); a SMILES/SDF catalogue is converted to an InChIKey stock before planning."}
+  - {id: UC7, case: "Own planner stock", behaviour: "`synspeq data import user_union_stock <file>` (or `build-union`); a SMILES/SDF catalog is converted to an InChIKey stock before planning."}
   - {id: UC8, case: "Configured stock file missing", behaviour: "blocked, no fallback to the default stock."}
-  - {id: UC9, case: "USPTO database missing", behaviour: "P2 blocked or unavailable per flag; P1, P3, P4 unaffected."}
+  - {id: UC9, case: "USPTO database missing", behaviour: "precedent support blocked or unavailable per flag; findability, residual steps and scaffold diversity unaffected."}
   - {id: UC10, case: "Compute node offline", behaviour: "R7."}
   - {id: UC11, case: "Add REAL after a first run", behaviour: "re-run `evaluate` with the REAL lookup; planner records and reaction features are reused, summaries are recomputed."}
   - {id: UC12, case: "Corrupt or wrongly formatted import", behaviour: "R11: invalid with the reason; the registration is stored as invalid and the run stops when it is requested."}

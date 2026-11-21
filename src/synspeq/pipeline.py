@@ -1,4 +1,4 @@
-"""One evaluation: population + cached planner records -> the four pillars, honouring the resource policy."""
+"""One evaluation: population + cached planner records -> the four measures, honoring the resource policy."""
 from __future__ import annotations
 import csv
 import json

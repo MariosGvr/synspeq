@@ -1,4 +1,4 @@
-"""Planner stocks: AiZynthFinder loads a stock as a set of InChIKeys. A catalogue the user imported as SMILES or SDF must be
+"""Planner stocks: AiZynthFinder loads a stock as a set of InChIKeys. A catalog the user imported as SMILES or SDF must be
 converted before planning; passing the text file itself would load as a set of SMILES strings and match nothing."""
 from __future__ import annotations
 import json
@@ -19,7 +19,7 @@ def is_compiled_stock(path: str) -> bool:
 
 
 def compiled_planner_stock(rid: str, path: str, cache_dir: str, hash_cache: Optional[str] = None, flags: Optional[dict] = None) -> str:
-    """Path of an InChIKey stock for resource `rid`. Already compiled stocks are used as they are; other catalogues are
+    """Path of an InChIKey stock for resource `rid`. Already compiled stocks are used as they are; other catalogs are
     converted once and the result is cached under cache_dir, keyed by the content hash of the source."""
     if os.path.isdir(path):
         for n in ("zinc_stock.hdf5", "stock.hdf5"):

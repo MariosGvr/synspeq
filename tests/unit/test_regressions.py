@@ -190,15 +190,15 @@ class Workflows(Tmp):
         with contextlib.redirect_stdout(out):
             self.assertEqual(main(["--data-dir", store, "data", "import", "enamine_bb", os.path.join(demo, "building_blocks.smi")]), 0)
             rc = main(["--data-dir", store, "evaluate", os.path.join(demo, "molecules.sdf"), "--routes-dir", os.path.join(demo, "routes"),
-                       "--pocket-field", "pocket_id", "--pillars", "P1,P3,P4", "--resources", "enamine_bb", "--out", self.p("out")])
+                       "--pocket-field", "pocket_id", "--measures", "findability,residual-steps,scaffold-diversity", "--resources", "enamine_bb", "--out", self.p("out")])
         self.assertEqual(rc, 0)
         text = out.getvalue()
         readme = open(os.path.join(ROOT, "README.md")).read()
-        for line in ("P1  Find 83.3%  Find>=1 66.7%  distinct 6  complete=True",
-                     "P3  median residual steps 1  frontier found 50.0%  needs on-demand n/a (needs both tiers)",
-                     "P4  N50 1  unique scaffold ratio 0.250  CSR-AUC 1.000"):
+        for line in ("Findability  Solved 83.3%  Solved>=1 66.7%  distinct 6  complete=True",
+                     "Residual steps  median 1  frontier found 50.0%  on demand n/a (needs both tiers)",
+                     "Scaffold diversity  N50 1  unique scaffold ratio 0.250  CSR-AUC 1.000"):
             self.assertIn(line, text)
-            self.assertIn(line.split("  needs on-demand")[0], readme)       # and the README shows the same numbers
+            self.assertIn(line.split("  on demand")[0], readme)       # and the README shows the same numbers
         rep = json.load(open(self.p("out", "report.json")))
         self.assertEqual(rep["population"]["n_invalid_records"], 1)
         self.assertEqual(rep["P1"]["counts"]["direct_purchase"], 1)
@@ -268,6 +268,16 @@ class Resources(Tmp):
                 t.join()
         self.assertEqual(errors, [])
         self.assertEqual(sorted(Store(root).all()), ["one", "two"])
+
+    def test_measures_by_name_or_identifier(self):
+        names = load_config(None, {"measures": ["findability", "Scaffold-Diversity", "precedent_support", "residual steps"]})["pillars"]
+        self.assertEqual(names, ["P1", "P4", "P2", "P3"])
+        self.assertEqual(load_config(None, {"pillars": ["P1", "p3"]})["pillars"], ["P1", "P3"])      # the older key and the identifiers still work
+        self.assertEqual(load_config(None, {})["pillars"], ["P1", "P2", "P3", "P4"])
+        with self.assertRaises(ValueError):
+            load_config(None, {"measures": ["coverage"]})
+        with self.assertRaises(ValueError):
+            load_config(None, {"measures": ["findability"], "pillars": ["P1"]})
 
     def test_hdf5_stock_row_count_fixed_and_table_format(self):
         import pandas as pd

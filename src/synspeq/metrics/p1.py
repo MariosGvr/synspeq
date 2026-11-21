@@ -1,4 +1,4 @@
-"""Pillar 1: findability (route recovery). Exact counts and denominators; nothing is rounded here.
+"""Findability. Exact counts and denominators; nothing is rounded here.
 
 All shares are over distinct molecules (the evaluation unit) unless stated. A population is `complete` only when
 no molecule is pending and none is an execution error; a partial population still reports its counts but its

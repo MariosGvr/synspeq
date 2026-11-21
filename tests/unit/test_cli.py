@@ -47,7 +47,7 @@ class CLI(unittest.TestCase):
         self.assertEqual(self.run_cli("--data-dir", sd, "data", "import", "enamine_bb", bb)[0], 0)
         out = os.path.join(d, "out")
         rc, text = self.run_cli("--data-dir", sd, "evaluate", os.path.join(d, "m.csv"), "--pocket-field", "pocket_id", "--routes-dir", os.path.join(d, "r"),
-                                "--pillars", "P1,P3,P4", "--resources", "enamine_bb", "--out", out)
+                                "--measures", "findability,residual-steps,scaffold-diversity", "--resources", "enamine_bb", "--out", out)
         self.assertEqual(rc, 0, text)
         rep = json.load(open(os.path.join(out, "report.json")))
         self.assertEqual(rep["P1"]["counts"]["routed"], 1)
@@ -57,10 +57,10 @@ class CLI(unittest.TestCase):
         self.assertIn("P4", rep)
         self.assertTrue(os.path.exists(os.path.join(out, "molecules.csv")))
         html = open(os.path.join(out, "report.html")).read()
-        self.assertIn("Pillar 1: route recovery", html)
-        self.assertIn("Pillar 3: deliverability", html)
-        self.assertIn("P2: not_assessed", html)                  # the banner names what was not assessed
-        self.assertNotIn("Pillar 2: chemical support", html)
+        self.assertIn("<h2>Findability</h2>", html)
+        self.assertIn("<h2>Residual steps</h2>", html)
+        self.assertIn("precedent support: not_assessed", html)       # the banner names what was not assessed
+        self.assertNotIn("<h2>Precedent support", html)
 
     def test_fetch_verifies_checksum_and_registers(self):
         import hashlib

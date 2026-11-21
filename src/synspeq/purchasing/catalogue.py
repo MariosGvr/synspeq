@@ -1,8 +1,8 @@
-"""Purchasing catalogues for Pillar 3.
+"""Purchasing catalogs for residual steps.
 
 Matching is strict: exact RDKit canonical isomeric SMILES (stereochemistry kept; no desalting, no
-normalisation). Tiers: 'in_stock' = a stocked building block catalogue (Enamine BB); 'on_demand' =
-a make-on-demand catalogue (Enamine REAL). A molecule found in both is 'in_stock'.
+normalisation). Tiers: 'in_stock' = a stocked building block catalog (Enamine BB); 'on_demand' =
+a make-on-demand catalog (Enamine REAL). A molecule found in both is 'in_stock'.
 
 REAL is far too large to hold in memory, so it is used through lookups: the intermediates of the routes are
 collected (`frontier_queries`), scanned once against the REAL files (`scan_membership`), and the answers are
@@ -49,7 +49,7 @@ def _iter_smiles(path: str, smiles_col: str = "smiles") -> Iterator[str]:
     elif low.endswith(".parquet"):
         try:
             import pyarrow.parquet as pq
-        except ImportError as e:                      # optional dependency, only for parquet catalogues
+        except ImportError as e:                      # optional dependency, only for parquet catalogs
             raise RuntimeError("reading .parquet needs pyarrow: pip install pyarrow") from e
         for s in pq.read_table(path, columns=[smiles_col]).column(smiles_col).to_pylist():
             yield s
@@ -78,12 +78,12 @@ def catalogue_files(path: str):
 
 
 def load_building_blocks(path: str, smiles_col: str = "smiles", already_canonical: bool = False, stats: Optional[dict] = None) -> Set[str]:
-    """Stocked catalogue -> set of canonical isomeric SMILES. Pass a dict as `stats` to receive n_records, n_unparseable,
-    n_files. A directory with no recognised catalogue file raises ValueError (it is not an empty catalogue)."""
+    """Stocked catalog -> set of canonical isomeric SMILES. Pass a dict as `stats` to receive n_records, n_unparseable,
+    n_files. A directory with no recognised catalog file raises ValueError (it is not an empty catalog)."""
     out: Set[str] = set()
     files = [f for f in catalogue_files(path) if is_catalogue_file(os.path.basename(f))]
     if not files:
-        raise ValueError(f"{path}: no catalogue files (*.smi, *.txt, *.csv, *.sdf, *.parquet, optionally .gz)")
+        raise ValueError(f"{path}: no catalog files (*.smi, *.txt, *.csv, *.sdf, *.parquet, optionally .gz)")
     n = bad = 0
     for f in files:
         for s in _iter_smiles(f, smiles_col):
@@ -101,8 +101,8 @@ def load_building_blocks(path: str, smiles_col: str = "smiles", already_canonica
 
 
 def scan_membership(queries: Set[str], files: Iterable[str], smiles_col: str = "smiles", already_canonical: bool = True) -> Dict[str, str]:
-    """One pass over catalogue files: returns {query: source file} for every query present. `queries` are canonical SMILES.
-    REAL is pre-canonicalised by RDKit, so catalogue strings are compared as given unless already_canonical=False."""
+    """One pass over catalog files: returns {query: source file} for every query present. `queries` are canonical SMILES.
+    REAL is pre-canonicalised by RDKit, so catalog strings are compared as given unless already_canonical=False."""
     hits: Dict[str, str] = {}
     for f in files:
         for s in _iter_smiles(f, smiles_col):

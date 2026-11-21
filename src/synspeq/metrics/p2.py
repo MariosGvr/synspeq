@@ -1,4 +1,4 @@
-"""Pillar 2: chemical support = retrieved reaction-precedent support of the saved routes.
+"""Precedent support: retrieved reaction-precedent support of the saved routes.
 
 Statement the report must carry: retrieved precedent evidence is not experimental feasibility; no qualifying
 precedent means support was not retrieved (not that the reaction cannot work); 0.6412 is a similarity cutoff, not a

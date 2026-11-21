@@ -1,4 +1,4 @@
-"""Pillar 3: deliverability on the primary route of routed molecules (purchasing frontier, strict matching)."""
+"""Residual steps on the primary route of routed molecules (purchasing frontier, strict matching)."""
 from __future__ import annotations
 from statistics import median as _median
 

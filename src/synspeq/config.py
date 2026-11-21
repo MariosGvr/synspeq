@@ -2,8 +2,20 @@
 from __future__ import annotations
 import yaml
 
-ALLOWED = {"profile", "resources", "planner_stock", "paths", "on_missing", "pillars", "data_dir", "pocket_field"}
-PILLARS = ("P1", "P2", "P3", "P4")
+ALLOWED = {"profile", "resources", "planner_stock", "paths", "on_missing", "measures", "pillars", "data_dir", "pocket_field"}
+PILLARS = ("P1", "P2", "P3", "P4")      # internal identifiers of the four measures (the keys of report.json)
+MEASURE_NAMES = {"P1": "findability", "P2": "precedent support", "P3": "residual steps", "P4": "scaffold diversity"}
+_BY_NAME = {n.replace(" ", "-"): k for k, n in MEASURE_NAMES.items()}
+
+
+def measure_id(x: str) -> str:
+    """A measure given by name (findability, precedent-support, residual-steps, scaffold-diversity) or by its identifier (P1-P4)."""
+    key = x.strip().lower().replace("_", "-").replace(" ", "-")
+    if key.upper() in PILLARS:
+        return key.upper()
+    if key in _BY_NAME:
+        return _BY_NAME[key]
+    raise ValueError(f"unknown measure {x!r} (use findability, precedent-support, residual-steps or scaffold-diversity)")
 
 
 def _str_list(cfg, key):
@@ -35,13 +47,14 @@ def load_config(path: str | None = None, overrides: dict | None = None) -> dict:
     if not isinstance(cfg["paths"], dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in cfg["paths"].items()):
         raise ValueError("paths must map resource ids to path strings")
     cfg.setdefault("on_missing", "stop")
+    if "measures" in cfg:               # "measures" is the documented key; "pillars" is the older name for the same setting
+        if "pillars" in cfg:
+            raise ValueError("give either measures or pillars, not both")
+        cfg["pillars"] = cfg.pop("measures")
     cfg.setdefault("pillars", list(PILLARS))
-    cfg["pillars"] = _str_list(cfg, "pillars")
+    cfg["pillars"] = [measure_id(x) for x in _str_list(cfg, "pillars")]
     if cfg["on_missing"] not in ("stop", "skip"):
         raise ValueError("on_missing must be 'stop' or 'skip'")
     if cfg["profile"] not in ("default", "custom"):
         raise ValueError("profile must be default | custom")
-    for p in cfg["pillars"]:
-        if p not in PILLARS:
-            raise ValueError(f"unknown pillar {p!r}")
     return cfg
